@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📝 영어 4선지 프리미엄 판서 도구</title>
+    <style>
+      @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+
+      :root {
+        --bg-color: #f1f5f9;
+        --card-bg: #ffffff;
+        --line-gray: #cbd5e1;
+        --line-red: #ff4d4d;
+        --text-main: #334155;
+        --accent: #ef4444;
+      }
+
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-color);
+        font-family: "Pretendard", sans-serif;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* 대시보드 스타일 상단 헤더 */
+      .dashboard-header {
+        width: 100%;
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        box-sizing: border-box;
+        z-index: 1000;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .class-info {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .class-title {
+        font-size: 18px;
+        font-weight: 900;
+        color: var(--text-main);
+        letter-spacing: -0.5px;
+      }
+
+      .class-subject {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* 디지털 시계 위젯 */
+      .time-widget {
+        background: #ffffff;
+        padding: 8px 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+        text-align: right;
+      }
+
+      #clock {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text-main);
+        font-variant-numeric: tabular-nums;
+      }
+
+      #date {
+        font-size: 11px;
+        font-weight: 700;
+        color: #94a3b8;
+      }
+
+      /* 중앙 모드 전환 컨트롤 (글래스 스타일) */
+      .mode-switcher {
+        display: flex;
+        background: rgba(226, 232, 240, 0.5);
+        padding: 5px;
+        border-radius: 18px;
+        gap: 5px;
+      }
+
+      .nav-btn {
+        padding: 10px 24px;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        font-weight: 800;
+        font-size: 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .nav-btn.active {
+        background: #ffffff;
+        color: var(--accent);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      /* 메인 캔버스 영역 */
+      .canvas {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.5s ease;
+      }
+
+      /* 4선지 세트 카드 스타일 */
+      .writing-paper {
+        width: 90%;
+        max-width: 1400px;
+        background: var(--card-bg);
+        border-radius: 40px;
+        padding: 60px 80px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03);
+        position: relative;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .mode-double .writing-paper {
+        padding: 40px 80px;
+      }
+
+      .line-container {
+        height: 240px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+      }
+
+      .mode-double .line-container {
+        height: 180px;
+      }
+
+      /* 선 디자인 */
+      .line {
+        width: 100%;
+        border-radius: 4px;
+      }
+
+      .line.normal {
+        background-color: var(--line-gray);
+        height: 3px;
+      }
+
+      .line.baseline {
+        background-color: var(--line-red);
+        height: 7px;
+        box-shadow: 0 2px 8px rgba(255, 77, 77, 0.2);
+      }
+
+      /* 가이드 알파벳 */
+      .alpha-guide {
+        position: absolute;
+        left: -100px;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        font-size: 42px;
+        font-weight: 900;
+        color: #e2e8f0;
+        user-select: none;
+      }
+
+      /* 세트 간 간격 */
+      .spacer {
+        height: 80px;
+        transition: all 0.5s ease;
+      }
+
+      .mode-single .set-2,
+      .mode-single .spacer {
+        display: none;
+        opacity: 0;
+      }
+
+      /* 종이 패턴 */
+      .paper-texture {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.02;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 86c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm66-3c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm-46-43c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm13-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM58 89c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM28 53c0 6.075-4.925 11-11 11S6 59.075 6 53s4.925-11 11-11 11 4.925 11 11zm40 24c0 1.105-.895 2-2 2s-2-.895-2-2 .895-2 2-2 2 .895 2 2z' fill='%23000' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+      }
+    </style>
+  </head>
+  <body class="mode-single">
+    <header class="dashboard-header">
+      <div class="header-left">
+        <div
+          style="
+            background: var(--accent);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 20px;
+          "
+        >
+          E
+        </div>
+        <div class="class-info">
+          <span class="class-title">Smart English Board</span>
+          <span class="class-subject">Writing Practice Tool</span>
+        </div>
+      </div>
+
+      <div class="mode-switcher">
+        <button id="btn-single" class="nav-btn active" onclick="setMode('single')">Single Set</button>
+        <button id="btn-double" class="nav-btn" onclick="setMode('double')">Double Set</button>
+      </div>
+
+      <div class="time-widget">
+        <div id="clock">00:00:00</div>
+        <div id="date">2026. 01. 07. Wed</div>
+      </div>
+    </header>
+
+    <div class="canvas">
+      <!-- SET 1 -->
+      <div class="writing-paper set-1">
+        <div class="paper-texture"></div>
+        <div class="line-container">
+          <div class="alpha-guide">
+            <span style="margin-top: -10px">A</span>
+            <span style="margin-top: 5px">a</span>
+            <span style="margin-top: 25px">g</span>
+          </div>
+          <div class="line normal"></div>
+          <div class="line normal"></div>
+          <div class="line baseline"></div>
+          <div class="line normal"></div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <!-- SET 2 -->
+      <div class="writing-paper set-2">
+        <div class="paper-texture"></div>
+        <div class="line-container">
+          <div class="alpha-guide">
+            <span style="margin-top: -10px">A</span>
+            <span style="margin-top: 5px">a</span>
+            <span style="margin-top: 25px">g</span>
+          </div>
+          <div class="line normal"></div>
+          <div class="line normal"></div>
+          <div class="line baseline"></div>
+          <div class="line normal"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function updateTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const seconds = String(now.getSeconds()).padStart(2, "0");
+        document.getElementById("clock").innerText = `${hours}:${minutes}:${seconds}`;
+
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        document.getElementById("date").innerText = `${year}. ${month}. ${day}. ${days[now.getDay()]}`;
+      }
+      setInterval(updateTime, 1000);
+      updateTime();
+
+      function setMode(mode) {
+        const body = document.body;
+        const btnSingle = document.getElementById("btn-single");
+        const btnDouble = document.getElementById("btn-double");
+
+        if (mode === "single") {
+          body.className = "mode-single";
+          btnSingle.classList.add("active");
+          btnDouble.classList.remove("active");
+        } else {
+          body.className = "mode-double";
+          btnDouble.classList.add("active");
+          btnSingle.classList.remove("active");
+        }
+      }
+    </script>
+  </body>
+</html>

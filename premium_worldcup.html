@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>프리미엄 이상형 월드컵</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --secondary: #ec4899;
+        --secondary-dark: #db2777;
+        --bg: #0a0a0f;
+        --bg-gradient: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+        --card-bg: #ffffff;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Noto Sans KR', sans-serif;
+        background: var(--bg);
+        color: white;
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-gradient);
+        z-index: -1;
+      }
+
+      body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
+        z-index: -1;
+        animation: pulse 8s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.8; }
+      }
+
+      .app-container {
+        width: 95%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        text-align: center;
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .restart-btn {
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        padding: 14px 32px;
+        background: var(--glass);
+        border: 2px solid var(--glass-border);
+        border-radius: 50px;
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        z-index: 9999;
+        backdrop-filter: blur(20px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+      .restart-btn:hover {
+        background: var(--secondary);
+        border-color: var(--secondary);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(236, 72, 153, 0.4);
+      }
+
+      h1 {
+        font-size: 4rem;
+        font-weight: 900;
+        margin-bottom: 15px;
+        background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -2px;
+        text-shadow: 0 0 80px rgba(99, 102, 241, 0.5);
+        animation: glow 3s ease-in-out infinite;
+      }
+
+      @keyframes glow {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.2); }
+      }
+
+      .sub-title {
+        color: #cbd5e1;
+        margin-bottom: 50px;
+        font-size: 1.3rem;
+        font-weight: 400;
+        opacity: 0.9;
+      }
+
+      .category-list,
+      .round-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 25px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .btn-item {
+        padding: 45px 30px;
+        background: var(--glass);
+        border: 2px solid var(--glass-border);
+        border-radius: 24px;
+        cursor: pointer;
+        color: white;
+        font-weight: 700;
+        font-size: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(20px);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .btn-item:hover::before {
+        left: 100%;
+      }
+
+      .btn-item:hover {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-color: transparent;
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(99, 102, 241, 0.4);
+      }
+
+      #game-area {
+        display: none;
+        width: 100%;
+        animation: fadeIn 0.6s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      #round-title {
+        color: var(--secondary);
+        font-size: 2.2rem;
+        font-weight: 900;
+        margin-bottom: 30px;
+        text-shadow: 0 0 30px rgba(236, 72, 153, 0.6);
+      }
+
+      .match-container {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 20px;
+        max-width: 1300px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .choice-card {
+        flex: 1;
+        background: var(--card-bg);
+        border-radius: 32px;
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        border: 3px solid transparent;
+      }
+
+      .choice-card::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 32px;
+        opacity: 0;
+        transition: opacity 0.4s;
+        z-index: -1;
+      }
+
+      .choice-card:hover {
+        transform: translateY(-15px) scale(1.03);
+        box-shadow: 0 30px 80px rgba(99, 102, 241, 0.5);
+      }
+
+      .choice-card:hover::before {
+        opacity: 1;
+      }
+
+      .image-wrapper {
+        width: 100%;
+        height: 65vh;
+        background: #000;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .card-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.4s;
+      }
+
+      .choice-card:hover .card-image {
+        transform: scale(1.05);
+      }
+
+      .name-tag {
+        padding: 40px 30px;
+        color: #1e293b;
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: white;
+        border-top: 3px solid #f1f5f9;
+        position: relative;
+      }
+
+      .vs-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 90px;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-style: italic;
+        text-shadow: 0 0 40px rgba(236, 72, 153, 0.5);
+        animation: rotate 4s ease-in-out infinite;
+        position: relative;
+      }
+
+      @keyframes rotate {
+        0%, 100% { transform: rotate(-5deg); }
+        50% { transform: rotate(5deg); }
+      }
+
+      #result-area {
+        display: none;
+        animation: popUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+
+      @keyframes popUp {
+        0% {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+        60% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      #winner-card-display {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      #winner-card-display .choice-card {
+        max-width: 700px;
+        animation: winner-shine 2s ease-in-out infinite;
+      }
+
+      @keyframes winner-shine {
+        0%, 100% {
+          box-shadow: 0 30px 80px rgba(99, 102, 241, 0.6);
+        }
+        50% {
+          box-shadow: 0 40px 100px rgba(236, 72, 153, 0.8);
+        }
+      }
+
+      .winner-title {
+        color: transparent;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 3.5rem;
+        font-weight: 900;
+        margin-bottom: 40px;
+        text-shadow: 0 0 60px rgba(251, 191, 36, 0.6);
+        animation: shine 2s ease-in-out infinite;
+      }
+
+      @keyframes shine {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.3); }
+      }
+
+      #selected-cat-name {
+        color: var(--primary);
+        font-size: 2.8rem;
+        font-weight: 900;
+        margin-bottom: 10px;
+        text-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
+      }
+
+      @media (max-width: 1024px) {
+        h1 {
+          font-size: 3rem;
+        }
+        .match-container {
+          flex-direction: column;
+          gap: 30px;
+        }
+        .vs-label {
+          font-size: 60px;
+          transform: rotate(90deg);
+        }
+        .image-wrapper {
+          height: 50vh;
+        }
+        .name-tag {
+          font-size: 2rem;
+          padding: 30px 20px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        h1 {
+          font-size: 2.2rem;
+        }
+        .sub-title {
+          font-size: 1rem;
+        }
+        .btn-item {
+          font-size: 1.2rem;
+          padding: 35px 20px;
+        }
+        .restart-btn {
+          top: 20px;
+          right: 20px;
+          padding: 12px 24px;
+          font-size: 0.9rem;
+        }
+        .winner-title {
+          font-size: 2.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="restart-btn" onclick="location.reload()">🏠 HOME</button>
+
+    <div class="app-container">
+      <div id="category-area">
+        <h1>🏆 이상형 월드컵</h1>
+        <p id="loading-text" class="sub-title">시트 데이터를 로드하고 있습니다...</p>
+        <div id="category-buttons" class="category-list"></div>
+      </div>
+
+      <div id="round-area" style="display: none">
+        <h2 id="selected-cat-name">카테고리</h2>
+        <p class="sub-title">진행할 라운드를 선택해 주세요</p>
+        <div id="round-buttons" class="round-selector"></div>
+      </div>
+
+      <div id="game-area">
+        <h2 id="round-title">라운드 정보</h2>
+        <div class="match-container">
+          <div id="left-card" class="choice-card" onclick="pick(0)"></div>
+          <div class="vs-label">VS</div>
+          <div id="right-card" class="choice-card" onclick="pick(1)"></div>
+        </div>
+      </div>
+
+      <div id="result-area">
+        <h1 class="winner-title">🎊 FINAL WINNER 🎊</h1>
+        <div id="winner-card-display"></div>
+      </div>
+    </div>
+
+    <script>
+      const SHEET_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRX-H0Q1h96KFsboBGbvRmWc3R2nG4eF2pksh2v_C2BcI5AbU0SymvSfdjbb53UAJC61rAjWHo6JAI_/pub?output=csv";
+
+      let allData = [];
+      let selectedList = [];
+      let currentRoundItems = [];
+      let nextRoundItems = [];
+      let matchIdx = 0;
+
+      function getSafeImageUrl(url) {
+        if (!url || !url.startsWith("http")) return "https://via.placeholder.com/800x600?text=No+Image";
+
+        if (url.includes(".webp") || url.includes(".jpg") || url.includes(".png")) {
+          return url;
+        }
+
+        return `https://wsrv.nl/?url=${encodeURIComponent(url)}&fit=contain&we=1`;
+      }
+
+      async function init() {
+        try {
+          const response = await fetch(SHEET_URL + "&cache=" + Date.now());
+          const text = await response.text();
+          const lines = text.trim().split(/\r?\n/).slice(1);
+
+          allData = lines
+            .map((line) => {
+              const fIdx = line.indexOf(",");
+              const sIdx = line.indexOf(",", fIdx + 1);
+              if (fIdx === -1 || sIdx === -1) return null;
+              return {
+                category: line.substring(0, fIdx).replace(/"/g, "").trim(),
+                name: line
+                  .substring(fIdx + 1, sIdx)
+                  .replace(/"/g, "")
+                  .trim(),
+                image_url: line
+                  .substring(sIdx + 1)
+                  .replace(/"/g, "")
+                  .trim(),
+              };
+            })
+            .filter((item) => item && item.name);
+
+          document.getElementById("loading-text").style.display = "none";
+          renderCategories();
+        } catch (e) {
+          document.getElementById("loading-text").innerText = "데이터 로딩 중 오류가 발생했습니다.";
+        }
+      }
+
+      function renderCategories() {
+        const categories = [...new Set(allData.map((d) => d.category))];
+        const container = document.getElementById("category-buttons");
+        container.innerHTML = "";
+        categories.forEach((cat) => {
+          const btn = document.createElement("div");
+          btn.className = "btn-item";
+          btn.innerText = cat;
+          btn.onclick = () => showRounds(cat);
+          container.appendChild(btn);
+        });
+      }
+
+      function showRounds(cat) {
+        selectedList = allData.filter((d) => d.category === cat).map((i) => ({ ...i }));
+        document.getElementById("category-area").style.display = "none";
+        document.getElementById("round-area").style.display = "block";
+        document.getElementById("selected-cat-name").innerText = cat;
+
+        const rb = document.getElementById("round-buttons");
+        rb.innerHTML = "";
+        [4, 8, 16, 32].forEach((num) => {
+          if (selectedList.length >= num) {
+            const b = document.createElement("div");
+            b.className = "btn-item";
+            b.innerText = num + "강";
+            b.onclick = () => startGame(num);
+            rb.appendChild(b);
+          }
+        });
+        const allB = document.createElement("div");
+        allB.className = "btn-item";
+        allB.innerText = `전체 시작 (${selectedList.length}명)`;
+        allB.style.border = "2px solid var(--primary)";
+        allB.onclick = () => startGame(selectedList.length);
+        rb.appendChild(allB);
+      }
+
+      function startGame(count) {
+        currentRoundItems = selectedList.sort(() => Math.random() - 0.5).slice(0, count);
+        document.getElementById("round-area").style.display = "none";
+        document.getElementById("game-area").style.display = "block";
+        matchIdx = 0;
+        nextRoundItems = [];
+        showMatch();
+      }
+
+      function showMatch() {
+        const total = currentRoundItems.length;
+        if (matchIdx * 2 === total - 1) {
+          nextRoundItems.push(currentRoundItems[matchIdx * 2]);
+          finishRound();
+          return;
+        }
+        const roundName = total === 2 ? "🥇 FINAL" : `${total}강`;
+        document.getElementById("round-title").innerText = `${roundName} (${matchIdx + 1}/${Math.floor(total / 2)})`;
+        renderCard(document.getElementById("left-card"), currentRoundItems[matchIdx * 2]);
+        renderCard(document.getElementById("right-card"), currentRoundItems[matchIdx * 2 + 1]);
+      }
+
+      function renderCard(cardElement, item) {
+        cardElement.innerHTML = `
+            <div class="image-wrapper">
+                <img class="card-image" 
+                     src="${getSafeImageUrl(item.image_url)}" 
+                     referrerpolicy="no-referrer"
+                     onerror="this.onerror=null; this.src='https://wsrv.nl/?url='+encodeURIComponent('${item.image_url}')+'&w=800&we=1';">
+            </div>
+            <div class="name-tag">${item.name}</div>
+        `;
+      }
+
+      function pick(side) {
+        nextRoundItems.push(currentRoundItems[matchIdx * 2 + side]);
+        matchIdx++;
+        if (matchIdx * 2 >= currentRoundItems.length) finishRound();
+        else showMatch();
+      }
+
+      function finishRound() {
+        if (nextRoundItems.length === 1) {
+          document.getElementById("game-area").style.display = "none";
+          document.getElementById("result-area").style.display = "block";
+          const winnerDisplay = document.getElementById("winner-card-display");
+          winnerDisplay.innerHTML = "";
+          const winnerCard = document.createElement("div");
+          winnerCard.className = "choice-card";
+          winnerCard.style.maxWidth = "700px";
+          renderCard(winnerCard, nextRoundItems[0]);
+          winnerDisplay.appendChild(winnerCard);
+        } else {
+          currentRoundItems = [...nextRoundItems].sort(() => Math.random() - 0.5);
+          nextRoundItems = [];
+          matchIdx = 0;
+          showMatch();
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

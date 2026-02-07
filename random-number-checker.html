@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 당첨 뽑기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .sidebar {
+            flex: 3;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+
+        .main-section {
+            flex: 1;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .setup-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .game-screen {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            padding: 15px;
+            font-size: 1.2em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d2ff;
+            box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.1);
+        }
+
+        .start-btn {
+            padding: 18px;
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.4);
+        }
+
+        .game-info {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .game-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .check-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .number-input-wrapper {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .number-input-wrapper label {
+            display: block;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .number-input-wrapper input {
+            width: 100%;
+            padding: 20px;
+            font-size: 2em;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .number-input-wrapper input:focus {
+            outline: none;
+            border-color: #00d2ff;
+            box-shadow: 0 0 0 5px rgba(0, 210, 255, 0.1);
+        }
+
+        .check-btn {
+            padding: 20px 60px;
+            font-size: 1.5em;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .check-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 210, 255, 0.4);
+        }
+
+        .check-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .finish-btn {
+            padding: 15px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .finish-btn:hover {
+            background: linear-gradient(135deg, #00b8e6 0%, #2e6ab8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .reset-btn {
+            padding: 15px;
+            font-size: 1.1em;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .reset-btn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-stats {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .sidebar-stat {
+            text-align: center;
+        }
+
+        .sidebar-stat-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .sidebar-stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .sidebar-stat-value.win-color {
+            color: #f5576c;
+        }
+
+        .sidebar-stat-value.lose-color {
+            color: #4facfe;
+        }
+
+        .history-list {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            align-content: start;
+            padding: 2px;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: #00d2ff;
+            border-radius: 10px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: #00b8e6;
+        }
+
+        .history-list {
+            scrollbar-width: thin;
+            scrollbar-color: #00d2ff #f1f1f1;
+        }
+
+        .history-item {
+            padding: 15px 10px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            animation: slideIn 0.3s ease;
+            min-height: 85px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .history-item.win {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .history-item.lose {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .history-number {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .history-result {
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .empty-history {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-size: 1em;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .modal-message {
+            font-size: 1.1em;
+            color: #666;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .modal-btn.cancel {
+            background: #6c757d;
+            margin-right: 10px;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #5a6268;
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        #modalButtons {
+            display: flex;
+            gap: 10px;
+        }
+
+        #modalButtons.single {
+            display: block;
+        }
+
+        #modalButtons.single .modal-btn {
+            width: 100%;
+        }
+
+        .winning-numbers {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .winning-numbers h3 {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+        }
+
+        .number-badge {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 사이드바 (왼쪽) -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>결과 기록</h2>
+                <div class="sidebar-stats">
+                    <div class="sidebar-stat">
+                        <div class="sidebar-stat-label">당첨</div>
+                        <div class="sidebar-stat-value win-color" id="winCount">0</div>
+                    </div>
+                    <div class="sidebar-stat">
+                        <div class="sidebar-stat-label">탈락</div>
+                        <div class="sidebar-stat-value lose-color" id="loseCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-list" id="historyList">
+                <div class="empty-history">
+                    아직 확인한 번호가 없습니다
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 섹션 (오른쪽) -->
+        <div class="main-section">
+            <!-- 설정 화면 -->
+            <div class="setup-screen" id="setupScreen">
+                <div class="header">
+                    <h1>🎯 랜덤 당첨 뽑기</h1>
+                    <p>참가자 수와 당첨자 수를 설정하세요</p>
+                </div>
+
+                <div class="input-group">
+                    <label>전체 참가자 수</label>
+                    <input type="number" id="totalInput" min="1" value="100" placeholder="예: 100">
+                </div>
+
+                <div class="input-group">
+                    <label>당첨자 수</label>
+                    <input type="number" id="winnersInput" min="1" value="20" placeholder="예: 20">
+                </div>
+
+                <button class="start-btn" onclick="startGame()">시작하기</button>
+            </div>
+
+            <!-- 게임 화면 -->
+            <div class="game-screen" id="gameScreen">
+                <div class="game-info">
+                    <div class="game-info-grid">
+                        <div class="info-item">
+                            <div class="info-label">전체 참가자</div>
+                            <div class="info-value" id="totalDisplay">100</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">당첨자 수</div>
+                            <div class="info-value" id="winnersDisplay">20</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">확인한 번호</div>
+                            <div class="info-value" id="checkedDisplay">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="check-section">
+                    <div class="number-input-wrapper">
+                        <label>번호를 입력하세요</label>
+                        <input 
+                            type="number" 
+                            id="numberInput" 
+                            min="1" 
+                            placeholder="1~100"
+                            onkeypress="if(event.key==='Enter') checkNumber()"
+                        >
+                    </div>
+
+                    <button class="check-btn" onclick="checkNumber()">확인하기</button>
+                </div>
+
+                <button class="finish-btn" onclick="finishGame()">게임 종료 (당첨번호 확인)</button>
+                <button class="reset-btn" onclick="confirmReset()">처음으로</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <div class="modal-icon" id="modalIcon">⚠️</div>
+                <div class="modal-title" id="modalTitle">알림</div>
+            </div>
+            <div class="modal-message" id="modalMessage"></div>
+            <div id="modalButtons">
+                <button class="modal-btn" onclick="closeModal()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let totalParticipants = 0;
+        let totalWinners = 0;
+        let winningNumbers = [];
+        let checkedNumbers = new Set();
+        let winCount = 0;
+        let loseCount = 0;
+
+        function startGame() {
+            const total = parseInt(document.getElementById('totalInput').value);
+            const winners = parseInt(document.getElementById('winnersInput').value);
+
+            if (!total || total < 1) {
+                showModal('⚠️', '입력 오류', '전체 참가자 수를 올바르게 입력하세요');
+                return;
+            }
+
+            if (!winners || winners < 1) {
+                showModal('⚠️', '입력 오류', '당첨자 수를 올바르게 입력하세요');
+                return;
+            }
+
+            if (winners > total) {
+                showModal('⚠️', '입력 오류', '당첨자 수는 전체 참가자 수보다 클 수 없습니다.<br>당첨자 수를 수정해주세요.');
+                return;
+            }
+
+            totalParticipants = total;
+            totalWinners = winners;
+
+            winningNumbers = generateWinningNumbers(total, winners);
+            checkedNumbers.clear();
+            winCount = 0;
+            loseCount = 0;
+
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'flex';
+
+            document.getElementById('totalDisplay').textContent = total;
+            document.getElementById('winnersDisplay').textContent = winners;
+            document.getElementById('checkedDisplay').textContent = '0';
+            document.getElementById('numberInput').max = total;
+            document.getElementById('numberInput').placeholder = '1~' + total;
+
+            document.getElementById('historyList').innerHTML = '<div class="empty-history">아직 확인한 번호가 없습니다</div>';
+            updateSidebarStats();
+
+            document.getElementById('numberInput').focus();
+        }
+
+        function generateWinningNumbers(total, count) {
+            const numbers = [];
+            while (numbers.length < count) {
+                const num = Math.floor(Math.random() * total) + 1;
+                if (!numbers.includes(num)) {
+                    numbers.push(num);
+                }
+            }
+            return numbers;
+        }
+
+        function checkNumber() {
+            const input = document.getElementById('numberInput');
+            const number = parseInt(input.value);
+
+            if (!number || number < 1 || number > totalParticipants) {
+                showModal('⚠️', '입력 오류', '1부터 ' + totalParticipants + ' 사이의 번호를 입력하세요');
+                return;
+            }
+
+            if (checkedNumbers.has(number)) {
+                showModal('⚠️', '중복 확인', '이미 확인한 번호입니다');
+                input.value = '';
+                input.focus();
+                return;
+            }
+
+            checkedNumbers.add(number);
+            const isWinner = winningNumbers.includes(number);
+
+            addToHistory(number, isWinner);
+
+            if (isWinner) {
+                winCount++;
+            } else {
+                loseCount++;
+            }
+            updateSidebarStats();
+
+            input.value = '';
+            document.getElementById('checkedDisplay').textContent = checkedNumbers.size;
+
+            setTimeout(() => {
+                input.focus();
+            }, 500);
+        }
+
+        function addToHistory(number, isWinner) {
+            const historyList = document.getElementById('historyList');
+
+            const emptyMsg = historyList.querySelector('.empty-history');
+            if (emptyMsg) {
+                emptyMsg.remove();
+            }
+
+            const item = document.createElement('div');
+            item.className = 'history-item ' + (isWinner ? 'win' : 'lose');
+            item.innerHTML = `
+                <div class="history-number">#${number}</div>
+                <div class="history-result">${isWinner ? '🎉 당첨' : '😢 탈락'}</div>
+            `;
+
+            historyList.insertBefore(item, historyList.firstChild);
+            historyList.scrollTop = 0;
+        }
+
+        function updateSidebarStats() {
+            document.getElementById('winCount').textContent = winCount;
+            document.getElementById('loseCount').textContent = loseCount;
+        }
+
+        function confirmReset() {
+            if (checkedNumbers.size > 0) {
+                showModal('⚠️', '초기화 확인', '진행 중인 게임을 초기화하시겠습니까?<br>모든 결과 기록이 사라집니다.', resetGame);
+            } else {
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('setupScreen').style.display = 'flex';
+        }
+
+        function finishGame() {
+            showWinningNumbers();
+        }
+
+        let modalEnterHandler = null;
+        let modalCallback = null;
+
+        function showModal(icon, title, message, callback) {
+            document.getElementById('modalIcon').textContent = icon;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').innerHTML = message;
+            
+            const modalButtons = document.getElementById('modalButtons');
+            
+            if (callback) {
+                // 확인/취소 버튼
+                modalButtons.className = '';
+                modalButtons.innerHTML = `
+                    <button class="modal-btn cancel" onclick="closeModal()">취소</button>
+                    <button class="modal-btn" onclick="confirmModalAction()">확인</button>
+                `;
+                modalCallback = callback;
+            } else {
+                // 확인 버튼만
+                modalButtons.className = 'single';
+                modalButtons.innerHTML = `
+                    <button class="modal-btn" onclick="closeModal()">확인</button>
+                `;
+                modalCallback = null;
+            }
+            
+            document.getElementById('modalOverlay').classList.add('show');
+            
+            // 기존 엔터 핸들러 제거
+            if (modalEnterHandler) {
+                document.removeEventListener('keydown', modalEnterHandler);
+            }
+            
+            // 새 엔터 핸들러 추가
+            modalEnterHandler = function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (callback) {
+                        confirmModalAction();
+                    } else {
+                        closeModal();
+                    }
+                }
+            };
+            document.addEventListener('keydown', modalEnterHandler);
+        }
+
+        function confirmModalAction() {
+            if (modalCallback) {
+                modalCallback();
+            }
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            modalCallback = null;
+            
+            // 엔터 핸들러 제거
+            if (modalEnterHandler) {
+                document.removeEventListener('keydown', modalEnterHandler);
+                modalEnterHandler = null;
+            }
+        }
+
+        function showWinningNumbers() {
+            const sortedWinners = [...winningNumbers].sort((a, b) => a - b);
+            
+            let numbersHtml = '<div class="numbers-grid">';
+            sortedWinners.forEach(num => {
+                const isChecked = checkedNumbers.has(num);
+                numbersHtml += `<div class="number-badge">${num}${isChecked ? ' ✓' : ''}</div>`;
+            });
+            numbersHtml += '</div>';
+
+            const message = `
+                <div class="winning-numbers">
+                    <h3>🎉 당첨 번호 목록</h3>
+                    ${numbersHtml}
+                </div>
+                <div style="text-align: center; color: #666; font-size: 0.95em;">
+                    총 ${totalWinners}개의 당첨 번호 중 ${winCount}개를 찾으셨습니다!<br>
+                    (✓ 표시는 확인한 번호입니다)
+                </div>
+            `;
+
+            showModal('🏆', '게임 종료', message);
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const numberInputs = document.querySelectorAll('input[type="number"]');
+            numberInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

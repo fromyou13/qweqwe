@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎼 오선보 복구 및 보정 버전</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+
+      body {
+        font-family: "Pretendard", sans-serif;
+        margin: 0;
+        background-color: white;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-y: hidden;
+        overflow-x: auto;
+      }
+
+      header {
+        background: #0f172a;
+        padding: 12px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+      }
+
+      #main-viewport {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 100vh;
+        padding-top: 60px;
+      }
+
+      #board-width-controller {
+        display: block;
+        width: 3000px;
+        padding: 0 50px;
+        box-sizing: border-box;
+        transition: width 0.05s linear;
+      }
+
+      .staff-set {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        position: relative;
+        border-left: 4px solid #1e293b; /* 시작선 */
+      }
+
+      .clef {
+        position: absolute;
+        left: 15px;
+        user-select: none;
+        pointer-events: none;
+        color: #1e293b;
+        font-family: "serif";
+        z-index: 10;
+      }
+
+      /* [높은음자리표] 2번째 줄(G)을 감싸는 위치로 복구 */
+      .clef-treble {
+        font-size: 165px;
+        top: -72px;
+      }
+
+      /* [낮은음자리표] 맨 위 5번째 줄에 머리가 닿도록 보정 */
+      .clef-bass {
+        font-size: 132px;
+        top: -38px;
+      }
+
+      .line {
+        width: 100%;
+        border-top: 3.5px solid #1e293b;
+      }
+
+      .btn-active {
+        background: #6366f1 !important;
+        color: white;
+      }
+      .mode-btn {
+        background: #334155;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="flex items-center gap-6">
+        <span class="text-xl font-bold">🎼 Music Master</span>
+        <div class="flex bg-slate-800 p-1 rounded-xl gap-1">
+          <button id="clef-treble" onclick="setClef('treble')" class="mode-btn btn-active">높은음</button>
+          <button id="clef-bass" onclick="setClef('bass')" class="mode-btn">낮은음</button>
+          <button id="clef-none" onclick="setClef('none')" class="mode-btn">빈 오선</button>
+        </div>
+        <div class="flex bg-slate-800 p-1 rounded-xl gap-1">
+          <button id="unit-1" onclick="setUnit(1)" class="mode-btn btn-active">1단</button>
+          <button id="unit-2" onclick="setUnit(2)" class="mode-btn">2단</button>
+        </div>
+      </div>
+      <a href="index.html" class="bg-slate-700 px-4 py-1.5 rounded-lg text-sm font-bold">나가기</a>
+    </header>
+
+    <div id="main-viewport">
+      <div id="board-width-controller">
+        <div id="line-container"></div>
+      </div>
+    </div>
+
+    <script>
+      let currentClef = "treble";
+      let currentUnit = 1;
+      let boardWidth = 3000;
+      const lineGap = 40;
+
+      function setClef(clef) {
+        currentClef = clef;
+        ["treble", "bass", "none"].forEach((c) => document.getElementById("clef-" + c).classList.toggle("btn-active", c === clef));
+        render();
+      }
+
+      function setUnit(unit) {
+        currentUnit = unit;
+        [1, 2].forEach((u) => document.getElementById("unit-" + u).classList.toggle("btn-active", u === unit));
+        render();
+      }
+
+      function render() {
+        const container = document.getElementById("line-container");
+        container.innerHTML = "";
+        const setMargin = 220;
+
+        for (let i = 0; i < currentUnit; i++) {
+          const setDiv = document.createElement("div");
+          setDiv.className = "staff-set";
+          setDiv.style.marginBottom = i < currentUnit - 1 ? `${setMargin}px` : "0";
+
+          let clefTag = "";
+          if (currentClef === "treble") {
+            clefTag = `<div class="clef clef-treble">𝄞</div>`;
+          } else if (currentClef === "bass") {
+            clefTag = `<div class="clef clef-bass">𝄢</div>`;
+          }
+
+          setDiv.innerHTML = `
+                    ${clefTag}
+                    <div class="line"></div>
+                    <div class="line" style="margin-top: ${lineGap}px"></div>
+                    <div class="line" style="margin-top: ${lineGap}px"></div>
+                    <div class="line" style="margin-top: ${lineGap}px"></div>
+                    <div class="line" style="margin-top: ${lineGap}px"></div>
+                `;
+          container.appendChild(setDiv);
+        }
+      }
+
+      window.addEventListener(
+        "wheel",
+        (e) => {
+          if (e.ctrlKey) {
+            e.preventDefault();
+            const controller = document.getElementById("board-width-controller");
+            if (e.deltaY > 0) boardWidth += 1000;
+            else boardWidth = Math.max(window.innerWidth, boardWidth - 1000);
+            controller.style.width = boardWidth + "px";
+          }
+        },
+        { passive: false }
+      );
+
+      render();
+    </script>
+  </body>
+</html>

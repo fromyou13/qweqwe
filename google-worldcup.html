@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>프리미엄 이상형 월드컵</title>
+    <style>
+      :root {
+        --primary: #4a90e2;
+        --secondary: #ff4757;
+        --bg: #0f172a;
+        --card-bg: #ffffff;
+      }
+
+      body {
+        font-family: "Pretendard", sans-serif;
+        background-color: var(--bg);
+        color: white;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden; /* 불필요한 스크롤 방지 */
+      }
+
+      .app-container {
+        width: 95%;
+        max-width: 1500px;
+        text-align: center;
+        position: relative;
+      }
+
+      /* [수정] 우상단 다시 시작 버튼 고정 */
+      .restart-btn {
+        position: fixed;
+        top: 25px;
+        right: 25px;
+        padding: 15px 30px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 40px;
+        color: white;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        z-index: 9999;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s;
+      }
+      .restart-btn:hover {
+        background: var(--secondary);
+        border-color: var(--secondary);
+        transform: scale(1.05);
+      }
+
+      h1 {
+        font-size: 2.8rem;
+        margin-top: 0;
+        letter-spacing: -1px;
+      }
+      .sub-title {
+        color: #94a3b8;
+        margin-bottom: 40px;
+        font-size: 1.2rem;
+      }
+
+      /* 대진 규모/카테고리 버튼 */
+      .category-list,
+      .round-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+      }
+      .btn-item {
+        padding: 35px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        cursor: pointer;
+        color: white;
+        font-weight: bold;
+        font-size: 1.4rem;
+        transition: 0.3s;
+      }
+      .btn-item:hover {
+        background: var(--primary);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(74, 144, 226, 0.3);
+      }
+
+      /* 게임 영역 */
+      #game-area {
+        display: none;
+        width: 100%;
+        animation: fadeIn 0.5s;
+      }
+      .match-container {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 10px;
+      }
+
+      /* [수정] 카드 디자인 최적화 (사진 65% 비중) */
+      .choice-card {
+        flex: 1;
+        background: var(--card-bg);
+        border-radius: 35px;
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+      }
+      .choice-card:hover {
+        transform: translateY(-10px) scale(1.01);
+        box-shadow: 0 0 50px rgba(74, 144, 226, 0.4);
+      }
+
+      .image-wrapper {
+        width: 100%;
+        height: 65vh;
+        background: #000;
+        overflow: hidden;
+        position: relative;
+      }
+      .card-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .name-tag {
+        padding: 35px;
+        color: #0f172a;
+        font-size: 2.8rem;
+        font-weight: 900;
+        background: white;
+        border-top: 1px solid #eee;
+      }
+
+      .vs-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 70px;
+        font-weight: 900;
+        color: var(--secondary);
+        font-style: italic;
+        text-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+      }
+
+      #result-area {
+        display: none;
+        animation: popUp 0.6s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes popUp {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="restart-btn" onclick="location.reload()">HOME</button>
+
+    <div class="app-container">
+      <div id="category-area">
+        <h1>🏆 이상형 월드컵</h1>
+        <p id="loading-text" class="sub-title">시트 데이터를 로드하고 있습니다...</p>
+        <div id="category-buttons" class="category-list"></div>
+      </div>
+
+      <div id="round-area" style="display: none">
+        <h2 id="selected-cat-name" style="color: var(--primary); font-size: 2.5rem; margin-bottom: 5px">카테고리</h2>
+        <p class="sub-title">진행할 라운드를 선택해 주세요.</p>
+        <div id="round-buttons" class="round-selector"></div>
+      </div>
+
+      <div id="game-area">
+        <h2 id="round-title" style="color: var(--secondary); font-size: 2rem; margin-bottom: 15px">라운드 정보</h2>
+        <div class="match-container">
+          <div id="left-card" class="choice-card" onclick="pick(0)"></div>
+          <div class="vs-label">VS</div>
+          <div id="right-card" class="choice-card" onclick="pick(1)"></div>
+        </div>
+      </div>
+
+      <div id="result-area">
+        <h1 style="color: var(--secondary); font-size: 3rem; margin-bottom: 30px">🎊 FINAL WINNER 🎊</h1>
+        <div id="winner-card-display" style="display: flex; justify-content: center"></div>
+      </div>
+    </div>
+
+    <script>
+      // ⚠️ 구글 시트 웹 게시(CSV) 주소를 여기에 입력
+      const SHEET_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRX-H0Q1h96KFsboBGbvRmWc3R2nG4eF2pksh2v_C2BcI5AbU0SymvSfdjbb53UAJC61rAjWHo6JAI_/pub?output=csv";
+
+      let allData = [];
+      let selectedList = [];
+      let currentRoundItems = [];
+      let nextRoundItems = [];
+      let matchIdx = 0;
+
+      // [중요] .webp 및 각종 이미지 주소 보안 해결 로직
+      function getSafeImageUrl(url) {
+        if (!url || !url.startsWith("http")) return "https://via.placeholder.com/800x600?text=No+Image";
+
+        // 원본이 webp이거나 이미지가 확실하면 그대로 사용 시도 (onerror에서 우회 처리됨)
+        if (url.includes(".webp") || url.includes(".jpg") || url.includes(".png")) {
+          return url;
+        }
+
+        // 그 외 복잡한 주소나 외부 차단 주소는 프록시 사용
+        return `https://wsrv.nl/?url=${encodeURIComponent(url)}&fit=contain&we=1`;
+      }
+
+      async function init() {
+        try {
+          const response = await fetch(SHEET_URL + "&cache=" + Date.now());
+          const text = await response.text();
+          const lines = text.trim().split(/\r?\n/).slice(1);
+
+          allData = lines
+            .map((line) => {
+              const fIdx = line.indexOf(",");
+              const sIdx = line.indexOf(",", fIdx + 1);
+              if (fIdx === -1 || sIdx === -1) return null;
+              return {
+                category: line.substring(0, fIdx).replace(/"/g, "").trim(),
+                name: line
+                  .substring(fIdx + 1, sIdx)
+                  .replace(/"/g, "")
+                  .trim(),
+                image_url: line
+                  .substring(sIdx + 1)
+                  .replace(/"/g, "")
+                  .trim(),
+              };
+            })
+            .filter((item) => item && item.name);
+
+          document.getElementById("loading-text").style.display = "none";
+          renderCategories();
+        } catch (e) {
+          document.getElementById("loading-text").innerText = "데이터 로딩 중 오류가 발생했습니다.";
+        }
+      }
+
+      function renderCategories() {
+        const categories = [...new Set(allData.map((d) => d.category))];
+        const container = document.getElementById("category-buttons");
+        container.innerHTML = "";
+        categories.forEach((cat) => {
+          const btn = document.createElement("div");
+          btn.className = "btn-item";
+          btn.innerText = cat;
+          btn.onclick = () => showRounds(cat);
+          container.appendChild(btn);
+        });
+      }
+
+      function showRounds(cat) {
+        // [수정] 명단 보존을 위한 깊은 복사
+        selectedList = allData.filter((d) => d.category === cat).map((i) => ({ ...i }));
+        document.getElementById("category-area").style.display = "none";
+        document.getElementById("round-area").style.display = "block";
+        document.getElementById("selected-cat-name").innerText = cat;
+
+        const rb = document.getElementById("round-buttons");
+        rb.innerHTML = "";
+        [4, 8, 16, 32].forEach((num) => {
+          if (selectedList.length >= num) {
+            const b = document.createElement("div");
+            b.className = "btn-item";
+            b.innerText = num + "강";
+            b.onclick = () => startGame(num);
+            rb.appendChild(b);
+          }
+        });
+        const allB = document.createElement("div");
+        allB.className = "btn-item";
+        allB.innerText = `전체 시작 (${selectedList.length}명)`;
+        allB.style.border = "1px solid var(--primary)";
+        allB.onclick = () => startGame(selectedList.length);
+        rb.appendChild(allB);
+      }
+
+      function startGame(count) {
+        currentRoundItems = selectedList.sort(() => Math.random() - 0.5).slice(0, count);
+        document.getElementById("round-area").style.display = "none";
+        document.getElementById("game-area").style.display = "block";
+        matchIdx = 0;
+        nextRoundItems = [];
+        showMatch();
+      }
+
+      function showMatch() {
+        const total = currentRoundItems.length;
+        if (matchIdx * 2 === total - 1) {
+          // 부전승
+          nextRoundItems.push(currentRoundItems[matchIdx * 2]);
+          finishRound();
+          return;
+        }
+        const roundName = total === 2 ? "🥇 FINAL" : `${total}강`;
+        document.getElementById("round-title").innerText = `${roundName} (${matchIdx + 1}/${Math.floor(total / 2)})`;
+        renderCard(document.getElementById("left-card"), currentRoundItems[matchIdx * 2]);
+        renderCard(document.getElementById("right-card"), currentRoundItems[matchIdx * 2 + 1]);
+      }
+
+      function renderCard(cardElement, item) {
+        // [수정] onerror에서 프록시로 2차 시도 하도록 강화
+        cardElement.innerHTML = `
+            <div class="image-wrapper">
+                <img class="card-image" 
+                     src="${getSafeImageUrl(item.image_url)}" 
+                     referrerpolicy="no-referrer"
+                     onerror="this.onerror=null; this.src='https://wsrv.nl/?url='+encodeURIComponent('${item.image_url}')+'&w=800&we=1';">
+            </div>
+            <div class="name-tag">${item.name}</div>
+        `;
+      }
+
+      function pick(side) {
+        nextRoundItems.push(currentRoundItems[matchIdx * 2 + side]);
+        matchIdx++;
+        if (matchIdx * 2 >= currentRoundItems.length) finishRound();
+        else showMatch();
+      }
+
+      function finishRound() {
+        if (nextRoundItems.length === 1) {
+          document.getElementById("game-area").style.display = "none";
+          document.getElementById("result-area").style.display = "block";
+          const winnerDisplay = document.getElementById("winner-card-display");
+          winnerDisplay.innerHTML = "";
+          const winnerCard = document.createElement("div");
+          winnerCard.className = "choice-card";
+          winnerCard.style.maxWidth = "650px";
+          renderCard(winnerCard, nextRoundItems[0]);
+          winnerDisplay.appendChild(winnerCard);
+        } else {
+          currentRoundItems = [...nextRoundItems].sort(() => Math.random() - 0.5);
+          nextRoundItems = [];
+          matchIdx = 0;
+          showMatch();
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

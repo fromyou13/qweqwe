@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>포켓몬 도감 - 검색 레이아웃 수정</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background-color: #fdfdfd;
+        color: #333;
+        overflow: hidden;
+      }
+      .fixed-height {
+        height: calc(100vh - 180px);
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* 카드 음영 및 고정 비율 설정 */
+      .pokemon-card {
+        background: white;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border-radius: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.5rem;
+        cursor: pointer;
+        height: 100%; /* 그리드 높이에 맞춤 */
+      }
+      .pokemon-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        transform: translateY(-10px);
+      }
+
+      /* 큰 노란색 버튼 */
+      .big-yellow-btn {
+        background-color: #fbbf24;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 18px;
+        font-weight: 900;
+        font-size: 1.1rem;
+        box-shadow: 0 5px 0 #d97706;
+        transition: all 0.1s;
+      }
+      .big-yellow-btn:active {
+        transform: translateY(3px);
+        box-shadow: 0 2px 0 #d97706;
+      }
+      .big-yellow-btn:disabled {
+        background-color: #e5e7eb;
+        box-shadow: 0 5px 0 #9ca3af;
+        cursor: not-allowed;
+      }
+
+      /* 모달 스타일 */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+      .modal-content {
+        background: white;
+        padding: 40px;
+        border-radius: 40px;
+        text-align: center;
+        box-shadow: 0 40px 80px rgba(0, 0, 0, 0.15);
+        border: 6px solid #fbbf24;
+        max-width: 520px;
+        width: 90%;
+        position: relative;
+      }
+
+      /* 속성 타입별 색상 */
+      .fire {
+        background-color: #ff9d55;
+      }
+      .water {
+        background-color: #5090d6;
+      }
+      .grass {
+        background-color: #63bb5b;
+      }
+      .electric {
+        background-color: #f3d23b;
+      }
+      .normal {
+        background-color: #9099a1;
+      }
+      .poison {
+        background-color: #ab6ac8;
+      }
+      .fairy {
+        background-color: #ec8fe6;
+      }
+      .ground {
+        background-color: #d97746;
+      }
+    </style>
+  </head>
+  <body class="h-screen flex flex-col">
+    <header class="bg-white p-4 flex justify-between items-center px-12 border-b-4 border-yellow-400">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="resetList()">
+        <span class="text-4xl animate-bounce">⚡</span>
+        <h1 class="text-3xl font-black text-blue-500 italic tracking-tighter">POKÉ-GALLERY</h1>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <div id="status-info" class="text-blue-600 font-black bg-yellow-100 px-4 py-1.5 rounded-full border-2 border-yellow-200 hidden text-sm"></div>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            id="search-input"
+            onkeypress="if(event.keyCode==13) startSearch()"
+            placeholder="이름이나 번호로 검색!"
+            class="bg-gray-50 border-2 border-gray-100 focus:border-blue-400 rounded-full px-6 py-2 w-72 outline-none shadow-inner"
+          />
+          <button onclick="startSearch()" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-full font-bold shadow-md">검색</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 p-8 fixed-height flex flex-col items-center overflow-y-auto hide-scrollbar">
+      <div id="poke-list" class="grid grid-cols-5 gap-8 w-full max-w-7xl"></div>
+      <div id="loading" class="text-center font-black text-yellow-400 text-4xl mt-20 animate-pulse">포켓몬을 찾는 중...</div>
+    </main>
+
+    <footer class="bg-white p-6 flex justify-center items-center gap-12 border-t-2 border-gray-100 shadow-2xl">
+      <button id="prev-btn" onclick="changePage(-1)" class="big-yellow-btn">이전 페이지</button>
+
+      <div class="flex flex-col items-center gap-1">
+        <div class="flex items-center gap-3 bg-gray-100 px-6 py-2 rounded-2xl border-2 border-gray-200">
+          <input
+            type="number"
+            id="jump-input"
+            onkeypress="if(event.keyCode==13) jumpToPage()"
+            class="w-16 bg-transparent text-center font-black text-2xl text-blue-600 outline-none"
+            min="1"
+          />
+          <span class="text-gray-300 font-bold text-xl">/</span>
+          <span id="total-pages" class="text-gray-400 font-bold text-xl">103</span>
+        </div>
+        <span class="text-[11px] text-gray-400 font-black uppercase tracking-widest">Page Jump</span>
+      </div>
+
+      <button id="next-btn" onclick="changePage(1)" class="big-yellow-btn">다음 페이지</button>
+    </footer>
+
+    <div id="image-modal" class="modal hidden" onclick="closeModal()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="absolute top-4 right-8 text-5xl cursor-pointer text-gray-300 hover:text-red-500 font-light" onclick="closeModal()">&times;</span>
+        <img id="modal-img" src="" class="mx-auto w-80 h-80 object-contain drop-shadow-2xl" alt="확대" />
+        <h3 id="modal-name" class="mt-4 text-5xl font-black text-gray-800 tracking-tighter"></h3>
+        <div id="modal-types" class="flex justify-center gap-3 mt-6"></div>
+        <div id="modal-stats" class="grid grid-cols-2 gap-y-3 gap-x-8 mt-10 bg-yellow-50 p-8 rounded-[2.5rem] border-2 border-yellow-100"></div>
+      </div>
+    </div>
+
+    <script>
+      let allPokemonData = [];
+      let currentDisplayList = [];
+      let currentPage = 1;
+      const limit = 10;
+
+      async function init() {
+        try {
+          const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
+          const data = await res.json();
+
+          const detailPromises = data.results.map(async (p, i) => {
+            const id = i + 1;
+            const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}/`);
+            const speciesData = await speciesRes.json();
+            const koName = speciesData.names.find((n) => n.language.name === "ko").name;
+            return { id, koName, enName: p.name, url: p.url };
+          });
+
+          allPokemonData = await Promise.all(detailPromises);
+          currentDisplayList = [...allPokemonData];
+          document.getElementById("loading").classList.add("hidden");
+          updateView();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      async function updateView() {
+        const list = document.getElementById("poke-list");
+        list.innerHTML = "";
+        document.getElementById("loading").classList.remove("hidden");
+
+        const start = (currentPage - 1) * limit;
+        const target = currentDisplayList.slice(start, start + limit);
+
+        const detailedPokemons = await Promise.all(target.map((p) => fetch(p.url).then((r) => r.json())));
+
+        document.getElementById("loading").classList.add("hidden");
+        detailedPokemons.forEach((poke, i) => {
+          list.innerHTML += `
+                    <div onclick="openModal('${poke.id}')" class="pokemon-card">
+                        <div class="bg-gray-50 rounded-[2rem] w-full aspect-square flex justify-center items-center p-4 mb-4 overflow-hidden shadow-inner">
+                            <img src="${poke.sprites.other["official-artwork"].front_default}" 
+                                 class="w-full h-full object-contain hover:scale-110 transition-transform duration-300" alt="${target[i].koName}">
+                        </div>
+                        <div class="text-sm font-black text-blue-300 font-mono italic mb-1">#${String(poke.id).padStart(4, "0")}</div>
+                        <div class="text-2xl font-black text-gray-700 truncate w-full text-center tracking-tighter">${target[i].koName}</div>
+                    </div>
+                `;
+        });
+
+        const total = Math.ceil(currentDisplayList.length / limit);
+        document.getElementById("jump-input").value = currentPage;
+        document.getElementById("total-pages").innerText = total;
+        document.getElementById("prev-btn").disabled = currentPage === 1;
+        document.getElementById("next-btn").disabled = currentPage === total || total === 0;
+      }
+
+      function jumpToPage() {
+        const val = parseInt(document.getElementById("jump-input").value);
+        const total = Math.ceil(currentDisplayList.length / limit);
+        if (val >= 1 && val <= total) {
+          currentPage = val;
+          updateView();
+        } else {
+          document.getElementById("jump-input").value = currentPage;
+        }
+      }
+
+      function changePage(step) {
+        currentPage += step;
+        updateView();
+      }
+
+      function startSearch() {
+        const query = document.getElementById("search-input").value.trim().toLowerCase();
+        const info = document.getElementById("status-info");
+        if (!query) {
+          resetList();
+          return;
+        }
+
+        currentDisplayList = allPokemonData.filter((p) => p.koName.includes(query) || p.enName.includes(query) || String(p.id) === query);
+
+        currentPage = 1;
+        info.innerText = currentDisplayList.length > 0 ? `결과: ${currentDisplayList.length}마리` : `검색 결과 없음`;
+        info.classList.remove("hidden");
+        updateView();
+      }
+
+      async function openModal(id) {
+        const modal = document.getElementById("image-modal");
+        modal.classList.remove("hidden");
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        const data = await res.json();
+        const koData = allPokemonData.find((d) => d.id == id);
+
+        document.getElementById("modal-img").src = data.sprites.other["official-artwork"].front_default;
+        document.getElementById("modal-name").innerText = koData.koName;
+        document.getElementById("modal-types").innerHTML = data.types
+          .map((t) => `<span class="px-5 py-1.5 rounded-full text-white font-black text-sm uppercase ${t.type.name}">${t.type.name}</span>`)
+          .join(" ");
+
+        const statsMap = { hp: "HP", attack: "공격", defense: "방어", "special-attack": "특공", "special-defense": "특방", speed: "속도" };
+        document.getElementById("modal-stats").innerHTML = data.stats
+          .map(
+            (s) => `
+                <div class="flex justify-between px-4 font-black text-xl"><span class="text-gray-400">${
+                  statsMap[s.stat.name]
+                }</span><span class="text-blue-500">${s.base_stat}</span></div>
+            `
+          )
+          .join("");
+      }
+
+      function closeModal() {
+        document.getElementById("image-modal").classList.add("hidden");
+      }
+      function resetList() {
+        document.getElementById("search-input").value = "";
+        document.getElementById("status-info").classList.add("hidden");
+        currentDisplayList = [...allPokemonData];
+        currentPage = 1;
+        updateView();
+      }
+
+      init();
+    </script>
+  </body>
+</html>
