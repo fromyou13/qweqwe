@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>퀴즈 배틀 - 멀티터치 최적화</title>
+    <title>퀴즈 배틀 - 쉼표 지원 및 멀티터치</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -37,20 +37,59 @@
       const JUNG = ["ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ", "ㅗ", "ㅘ", "ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ", "ㅟ", "ㅠ", "ㅡ", "ㅢ", "ㅣ"];
       const JONG = ["", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
       const VOWEL_COMBINATIONS = { "ㅗㅏ": "ㅘ", "ㅗㅐ": "ㅙ", "ㅗㅣ": "ㅚ", "ㅜㅓ": "ㅝ", "ㅜㅔ": "ㅞ", "ㅜㅣ": "ㅟ", "ㅡㅣ": "ㅢ" };
-      const KOREAN_KEYBOARD_NORMAL = [["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"], ["ㅂ", "ㅈ", "ㄷ", "ㄱ", "ㅅ", "ㅛ", "ㅕ", "ㅑ", "ㅐ", "ㅔ"], ["ㅁ", "ㄴ", "ㅇ", "ㄹ", "ㅎ", "ㅗ", "ㅓ", "ㅏ", "ㅣ", "삭제"], ["Shift", "ㅋ", "ㅌ", "ㅊ", "ㅍ", "ㅠ", "ㅜ", "ㅡ", "!", "?"]];
-      const KOREAN_KEYBOARD_SHIFTED = [["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"], ["ㅃ", "ㅉ", "ㄸ", "ㄲ", "ㅆ", "ㅛ", "ㅕ", "ㅑ", "ㅒ", "ㅖ"], ["ㅁ", "ㄴ", "ㅇ", "ㄹ", "ㅎ", "ㅗ", "ㅓ", "ㅏ", "ㅣ", "삭제"], ["Shift", "ㅋ", "ㅌ", "ㅊ", "ㅍ", "ㅠ", "ㅜ", "ㅡ", "!", "?"]];
+      
+      // 키보드 레이아웃에 쉼표(,) 추가
+      const KOREAN_KEYBOARD_NORMAL = [
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+        ["ㅂ", "ㅈ", "ㄷ", "ㄱ", "ㅅ", "ㅛ", "ㅕ", "ㅑ", "ㅐ", "ㅔ"],
+        ["ㅁ", "ㄴ", "ㅇ", "ㄹ", "ㅎ", "ㅗ", "ㅓ", "ㅏ", "ㅣ", "삭제"],
+        ["Shift", "ㅋ", "ㅌ", "ㅊ", "ㅍ", "ㅠ", "ㅜ", "ㅡ", ",", "."]
+      ];
+      const KOREAN_KEYBOARD_SHIFTED = [
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+        ["ㅃ", "ㅉ", "ㄸ", "ㄲ", "ㅆ", "ㅛ", "ㅕ", "ㅑ", "ㅒ", "ㅖ"],
+        ["ㅁ", "ㄴ", "ㅇ", "ㄹ", "ㅎ", "ㅗ", "ㅓ", "ㅏ", "ㅣ", "삭제"],
+        ["Shift", "ㅋ", "ㅌ", "ㅊ", "ㅍ", "ㅠ", "ㅜ", "ㅡ", "!", "?"]
+      ];
       const colors = ["bg-rose-500", "bg-sky-500", "bg-amber-500", "bg-emerald-500", "bg-purple-500"];
 
-      // CSV 파싱 및 데이터 로드 (기존 로직 유지)
+      // 따옴표 내 쉼표를 허용하는 정교한 CSV 파서
+      function parseCSV(text) {
+        const result = [];
+        let row = [];
+        let field = "";
+        let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          if (inQuotes) {
+            if (char === '"' && text[i+1] === '"') { field += '"'; i++; }
+            else if (char === '"') { inQuotes = false; }
+            else { field += char; }
+          } else {
+            if (char === '"') { inQuotes = true; }
+            else if (char === ',') { row.push(field); field = ""; }
+            else if (char === '\n' || char === '\r') {
+              row.push(field);
+              if (row.join('').trim() !== "") result.push(row);
+              row = []; field = "";
+              if (char === '\r' && text[i+1] === '\n') i++;
+            } else { field += char; }
+          }
+        }
+        if (field || row.length > 0) { row.push(field); result.push(row); }
+        return result;
+      }
+
       async function initData() {
         try {
           const res = await fetch(CSV_URL);
           const text = await res.text();
-          const rows = text.split('\n').slice(1);
-          quizzes = rows.map(r => {
-            const parts = r.split(',');
-            return { question: parts[0]?.trim(), answer: parts[1]?.trim() };
-          }).filter(q => q.question && q.answer);
+          const parsedData = parseCSV(text);
+          
+          quizzes = parsedData.slice(1).map(row => ({
+            question: row[0]?.trim() || "",
+            answer: row[1]?.trim() || ""
+          })).filter(q => q.question && q.answer);
           
           for (let i = quizzes.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -97,24 +136,19 @@
         render();
       }
 
-      // 개별 플레이어 입력 처리 (부분 업데이트)
       window.handleInput = (pIdx, key) => {
         if (state.correctPlayer !== null) return;
         const p = state.players[pIdx];
-        if (key === 'Shift') {
-          p.isShifted = !p.isShifted;
-        } else if (key === '삭제') {
-          p.answerChars.pop();
-        } else {
-          p.answerChars.push(key);
-          p.isShifted = false;
-        }
+        if (key === 'Shift') { p.isShifted = !p.isShifted; }
+        else if (key === '삭제') { p.answerChars.pop(); }
+        else { p.answerChars.push(key); p.isShifted = false; }
         updatePlayerUI(pIdx);
       };
 
       window.checkAnswer = (pIdx) => {
         if (state.correctPlayer !== null) return;
         const p = state.players[pIdx];
+        // 정답 비교 시 공백만 제거하고 특수문자(쉼표 등)는 유지
         const target = quizzes[state.currentIdx].answer.replace(/\s/g, "").toUpperCase();
         const current = assembleHangul(p.answerChars).replace(/\s/g, "").toUpperCase();
         
@@ -129,7 +163,6 @@
         }
       };
 
-      // 특정 플레이어의 UI만 업데이트 (성능 최적화)
       function updatePlayerUI(pIdx) {
         const p = state.players[pIdx];
         const display = document.getElementById(`display-${pIdx}`);
@@ -149,7 +182,7 @@
       }
 
       function showResultModal() {
-        render(); // 모달 표시를 위해 전체 렌더링
+        render();
         state.countdown = 3;
         const timer = setInterval(() => {
           state.countdown--;
@@ -158,12 +191,9 @@
             state.currentIdx++;
             if (state.currentIdx < quizzes.length) {
               state.correctPlayer = null;
-              state.players.forEach(p => p.answerChars = []);
+              state.players.forEach(p => { p.answerChars = []; p.isShifted = false; });
               render();
-            } else {
-              state.view = "result";
-              render();
-            }
+            } else { state.view = "result"; render(); }
           } else {
             const el = document.getElementById("modal-cd");
             if (el) el.innerText = state.countdown;
@@ -193,7 +223,7 @@
                   <div class="${colors[i]} text-white p-2 flex justify-between font-bold">
                     <span>PLAYER ${i+1}</span><span>${p.score}pt</span>
                   </div>
-                  <div id="display-${i}" class="flex-1 flex items-center justify-center text-2xl font-black p-2 text-center break-all">대기...</div>
+                  <div id="display-${i}" class="flex-1 flex items-center justify-center text-2xl font-black p-2 text-center break-all text-slate-800">대기...</div>
                   <div class="p-1 bg-slate-100">
                     <div id="kb-${i}" class="flex flex-col gap-0.5 mb-1"></div>
                     <button onpointerdown="checkAnswer(${i})" class="w-full h-12 bg-blue-600 text-white rounded-lg font-black shadow-lg active:bg-blue-800">제 출</button>
@@ -205,7 +235,8 @@
               <div class="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
                 <div class="modal-content ${colors[state.correctPlayer-1]} p-20 rounded-[3rem] text-center text-white border-8 border-white/30">
                   <h3 class="text-6xl font-black mb-4">정답!</h3>
-                  <p class="text-3xl mb-8">PLAYER ${state.correctPlayer}</p>
+                  <p class="text-3xl mb-4">PLAYER ${state.correctPlayer}</p>
+                  <p class="text-2xl font-bold bg-white/20 p-4 rounded-xl mb-8">${quizzes[state.currentIdx].answer}</p>
                   <div id="modal-cd" class="text-9xl font-black">${state.countdown}</div>
                 </div>
               </div>
