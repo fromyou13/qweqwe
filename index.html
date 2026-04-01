@@ -3,218 +3,207 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>5학년 6반 스마트 대시보드</title>
+    <title>My Web Toolbox - 잡다한 창고</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;800&display=swap" rel="stylesheet" />
     <style>
       body {
-        font-family: "Noto Sans KR", sans-serif;
-        background-color: #f8fafc;
+        font-family: "Pretendard", sans-serif;
+        background-color: #f1f5f9;
+        color: #334155;
       }
       .glass-card {
         background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s ease;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .glass-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: #3b82f6;
       }
-      .gradient-bg {
-        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      .category-title {
+        border-left: 4px solid #3b82f6;
+        padding-left: 12px;
       }
-      .status-dot {
-        height: 8px;
+      /* 스크롤바 커스텀 */
+      ::-webkit-scrollbar {
         width: 8px;
-        background-color: #22c55e;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
       }
     </style>
   </head>
-  <body class="min-h-screen text-slate-800">
-    <!-- 상단 네비게이션/헤더 -->
-    <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center sticky top-0 z-50">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center text-white shadow-lg">
-          <i class="fa-solid fa-graduation-cap"></i>
+  <body class="min-h-screen p-6 md:p-12 lg:p-16">
+    <!-- 헤더 영역 -->
+    <header class="max-w-6xl mx-auto mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div class="space-y-2">
+        <div class="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-bold rounded-full mb-2">
+          <i class="fa-solid fa-box-archive mr-1"></i> Personal Archive
         </div>
-        <div>
-          <h1 class="text-xl font-black text-slate-900 leading-tight">5-6 Smart Hub</h1>
-          <p class="text-xs text-slate-500 font-medium"><span class="status-dot animate-pulse"></span>오늘도 즐거운 수업시간</p>
-        </div>
+        <h1 class="text-5xl font-black text-slate-900 tracking-tight">Web Toolbox</h1>
+        <p class="text-slate-500 text-lg font-medium">유용한 도구들과 직접 만든 게임들을 모아놓은 개인용 창고입니다.</p>
       </div>
-
-      <div class="flex items-center gap-6">
-        <div class="hidden md:flex flex-col items-end">
-          <span id="current-date" class="text-sm font-bold text-slate-700">2026. 02. 08</span>
-          <span id="current-time" class="text-xl font-black text-indigo-600 tracking-tighter">00:00:00</span>
-        </div>
+      <div class="bg-white/50 p-4 rounded-2xl border border-slate-200 text-right min-w-[200px]">
+        <div id="clock" class="text-3xl font-black text-blue-600 tabular-nums">00:00:00</div>
+        <div id="date" class="text-slate-500 font-semibold mt-1 uppercase tracking-wider text-sm">2026. 04. 01. WED</div>
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-8">
-      <!-- 메인 환영 섹션 -->
-      <section class="mb-12">
-        <div class="gradient-bg rounded-3xl p-8 text-white flex flex-col md:flex-row justify-between items-center shadow-xl relative overflow-hidden">
-          <div class="relative z-10 text-center md:text-left">
-            <h2 class="text-3xl font-black mb-2">안녕하세요, 5학년 6반! 😊</h2>
-            <p class="text-indigo-100 text-lg opacity-90">필요한 도구를 선택하여 수업을 시작해 보세요.</p>
-          </div>
-          <div class="mt-6 md:mt-0 relative z-10 flex gap-4">
-            <div class="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-3 text-center">
-              <span class="block text-xs uppercase font-bold opacity-70">진행 도구</span>
-              <span class="text-2xl font-black">10</span>
-            </div>
-          </div>
-          <!-- 배경 장식 -->
-          <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+    <main class="max-w-6xl mx-auto space-y-16">
+      <!-- 1. 학습 및 생산성 도구 섹션 -->
+      <section>
+        <div class="flex items-center justify-between mb-8">
+          <h2 class="category-title text-2xl font-black text-slate-800">Learning & Production</h2>
+          <span class="text-sm font-bold text-slate-400">5 ITEMS</span>
         </div>
-      </section>
-
-      <!-- 카테고리: 수업 지원 도구 -->
-      <section class="mb-12">
-        <div class="flex items-center gap-3 mb-6">
-          <h3 class="text-xl font-black text-slate-800">📝 수업 지원 & 판서</h3>
-          <div class="h-1 flex-grow bg-slate-200 rounded-full"></div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- 영어 판서 1 -->
-          <a href="eng.html" class="glass-card rounded-2xl p-6 flex items-start gap-4">
-            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- 신규 추가: 글자수 세기 -->
+          <a href="char_count.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
               <i class="fa-solid fa-pen-nib"></i>
             </div>
             <div>
-              <h4 class="font-bold text-slate-900 mb-1">영어 4선지 (v1)</h4>
-              <p class="text-sm text-slate-500">기본적인 영어 알파벳 판서 및 가로 확장 도구</p>
+              <h3 class="font-black text-slate-900 text-lg">글자수 세기</h3>
+              <p class="text-sm text-slate-500 mt-1">한글/영어 글자수 측정 도구</p>
             </div>
           </a>
-          <!-- 영어 판서 2 -->
-          <a href="eng_2nd.html" class="glass-card rounded-2xl p-6 flex items-start gap-4">
-            <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-xl shrink-0">
-              <i class="fa-solid fa-chalkboard"></i>
+
+          <a href="eng_2nd.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+              <i class="fa-solid fa-display"></i>
             </div>
             <div>
-              <h4 class="font-bold text-slate-900 mb-1">영어 4선지 (v2)</h4>
-              <p class="text-sm text-slate-500">대시보드 스타일의 정돈된 프리미엄 판서 환경</p>
+              <h3 class="font-black text-slate-900 text-lg">영어 4선지 판서</h3>
+              <p class="text-sm text-slate-500 mt-1">수업용 디지털 판서 시스템</p>
             </div>
           </a>
-          <!-- 음악 판서 -->
-          <a href="music.html" class="glass-card rounded-2xl p-6 flex items-start gap-4">
-            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+
+          <a href="flashcard_app.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+              <i class="fa-solid fa-cards-blank"></i>
+            </div>
+            <div>
+              <h3 class="font-black text-slate-900 text-lg">플래시카드</h3>
+              <p class="text-sm text-slate-500 mt-1">카드 뒤집기 단어 암기 앱</p>
+            </div>
+          </a>
+
+          <a href="music.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
               <i class="fa-solid fa-music"></i>
             </div>
             <div>
-              <h4 class="font-bold text-slate-900 mb-1">오선보 판서</h4>
-              <p class="text-sm text-slate-500">높은음/낮은음자리표 선택이 가능한 음악 수업 도구</p>
+              <h3 class="font-black text-slate-900 text-lg">오선보 보정 도구</h3>
+              <p class="text-sm text-slate-500 mt-1">음악 악보 작성 및 판서 지원</p>
             </div>
           </a>
-        </div>
-      </section>
 
-      <!-- 카테고리: 학습 게임 & 활동 -->
-      <section class="mb-12">
-        <div class="flex items-center gap-3 mb-6">
-          <h3 class="text-xl font-black text-slate-800">🎮 학습 게임 & 활동</h3>
-          <div class="h-1 flex-grow bg-slate-200 rounded-full"></div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <!-- 영어 단어 릴레이 -->
-          <a href="eng_word_relay.html" class="glass-card rounded-2xl p-6 flex flex-col gap-4">
-            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-xl">
-              <i class="fa-solid fa-font"></i>
-            </div>
-            <div>
-              <h4 class="font-bold text-slate-900 mb-1">Wordly 영어 끝말잇기</h4>
-              <p class="text-xs text-slate-500">API 실시간 단어 체크가 포함된 영어 게임</p>
-            </div>
-          </a>
-          <!-- 플래시카드 -->
-          <a href="flashcard_app.html" class="glass-card rounded-2xl p-6 flex flex-col gap-4">
-            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
-              <i class="fa-solid fa-clone"></i>
-            </div>
-            <div>
-              <h4 class="font-bold text-slate-900 mb-1">단어 플래시카드</h4>
-              <p class="text-xs text-slate-500">암기 및 북마크 기능이 있는 학습 카드</p>
-            </div>
-          </a>
-          <!-- 포켓몬 도감 -->
-          <a href="poke.html" class="glass-card rounded-2xl p-6 flex flex-col gap-4">
-            <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-xl flex items-center justify-center text-xl">
-              <i class="fa-solid fa-bolt"></i>
-            </div>
-            <div>
-              <h4 class="font-bold text-slate-900 mb-1">포켓몬 도감</h4>
-              <p class="text-xs text-slate-500">검색 및 상세 정보 조회가 가능한 도감</p>
-            </div>
-          </a>
-          <!-- 랜덤 당첨 -->
-          <a href="random-number-checker.html" class="glass-card rounded-2xl p-6 flex flex-col gap-4">
-            <div class="w-12 h-12 bg-cyan-100 text-cyan-600 rounded-xl flex items-center justify-center text-xl">
+          <a href="random-number-checker.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
               <i class="fa-solid fa-dice"></i>
             </div>
             <div>
-              <h4 class="font-bold text-slate-900 mb-1">랜덤 번호 추첨</h4>
-              <p class="text-xs text-slate-500">발표자 선정이나 이벤트용 당첨자 뽑기</p>
+              <h3 class="font-black text-slate-900 text-lg">랜덤 당첨 뽑기</h3>
+              <p class="text-sm text-slate-500 mt-1">번호 추첨 및 당첨 결과 확인</p>
             </div>
           </a>
         </div>
       </section>
 
-      <!-- 카테고리: 월드컵 & 엔터테인먼트 -->
-      <section class="mb-12">
-        <div class="flex items-center gap-3 mb-6">
-          <h3 class="text-xl font-black text-slate-800">🏆 이상형 월드컵</h3>
-          <div class="h-1 flex-grow bg-slate-200 rounded-full"></div>
+      <!-- 2. 게임 및 엔터테인먼트 섹션 -->
+      <section>
+        <div class="flex items-center justify-between mb-8">
+          <h2 class="category-title text-2xl font-black text-slate-800">Games & Entertainment</h2>
+          <span class="text-sm font-bold text-slate-400">5 ITEMS</span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <a href="premium_worldcup.html" class="glass-card rounded-2xl p-6 flex items-center gap-6 border-l-4 border-indigo-500">
-            <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center text-2xl shrink-0">
-              <i class="fa-solid fa-trophy"></i>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <a href="tetris.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+              <i class="fa-solid fa-gamepad"></i>
             </div>
             <div>
-              <h4 class="text-lg font-bold text-slate-900 mb-1">프리미엄 이상형 월드컵 (v1)</h4>
-              <p class="text-sm text-slate-500">고급스러운 디자인과 애니메이션이 적용된 월드컵</p>
+              <h3 class="font-black text-slate-900 text-lg">네온 테트리스</h3>
+              <p class="text-sm text-slate-500 mt-1">화려한 이펙트의 테트리스 게임</p>
             </div>
           </a>
-          <a href="google-worldcup.html" class="glass-card rounded-2xl p-6 flex items-center gap-6 border-l-4 border-slate-800">
-            <div class="w-16 h-16 bg-slate-100 text-slate-800 rounded-2xl flex items-center justify-center text-2xl shrink-0">
-              <i class="fa-solid fa-ranking-star"></i>
+
+          <a href="eng_word_relay.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-cyan-100 text-cyan-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+              <i class="fa-solid fa-spell-check"></i>
             </div>
             <div>
-              <h4 class="text-lg font-bold text-slate-900 mb-1">Google 스타일 월드컵 (v2)</h4>
-              <p class="text-sm text-slate-500">심플하고 직관적인 구글 테마의 월드컵</p>
+              <h3 class="font-black text-slate-900 text-lg">영어 끝말잇기</h3>
+              <p class="text-sm text-slate-500 mt-1">사전 기반 영단어 릴레이</p>
+            </div>
+          </a>
+
+          <a href="poke.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+              <i class="fa-solid fa-circle-dot"></i>
+            </div>
+            <div>
+              <h3 class="font-black text-slate-900 text-lg">포켓몬 도감</h3>
+              <p class="text-sm text-slate-500 mt-1">포켓몬 정보 실시간 조회</p>
+            </div>
+          </a>
+
+          <a href="premium_worldcup.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-fuchsia-100 text-fuchsia-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+            <div>
+              <h3 class="font-black text-slate-900 text-lg">프리미엄 월드컵</h3>
+              <p class="text-sm text-slate-500 mt-1">고급스러운 다크 테마 월드컵</p>
+            </div>
+          </a>
+
+          <a href="google-worldcup.html" class="glass-card p-6 rounded-3xl flex items-center gap-5">
+            <div class="w-16 h-16 bg-slate-200 text-slate-700 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+              <i class="fa-brands fa-google"></i>
+            </div>
+            <div>
+              <h3 class="font-black text-slate-900 text-lg">심플 월드컵</h3>
+              <p class="text-sm text-slate-500 mt-1">깔끔한 화이트 스타일 월드컵</p>
             </div>
           </a>
         </div>
       </section>
     </main>
 
-    <footer class="text-center py-10 text-slate-400 text-sm">
-      <p>© 2026 5-6 Smart Classroom Dashboard. All tools ready.</p>
+    <footer class="max-w-6xl mx-auto mt-24 pt-12 border-t border-slate-200 text-center text-slate-400 text-sm font-medium">
+      <p>My Web Archive Project • Built with HTML/CSS/JS</p>
+      <p class="mt-2 text-slate-300">© 2026 Personal Toolbox. All rights reserved.</p>
     </footer>
 
     <script>
       function updateDateTime() {
         const now = new Date();
 
-        // 시간 업데이트
+        // 시간 포맷팅
         const hours = String(now.getHours()).padStart(2, "0");
         const minutes = String(now.getMinutes()).padStart(2, "0");
         const seconds = String(now.getSeconds()).padStart(2, "0");
-        document.getElementById("current-time").innerText = `${hours}:${minutes}:${seconds}`;
+        document.getElementById("clock").innerText = `${hours}:${minutes}:${seconds}`;
 
-        // 날짜 업데이트
+        // 날짜 포맷팅
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, "0");
         const date = String(now.getDate()).padStart(2, "0");
-        const days = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-        const dayName = days[now.getDay()];
-        document.getElementById("current-date").innerText = `${year}. ${month}. ${date} ${dayName}`;
+        const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+        document.getElementById("date").innerText = `${year}. ${month}. ${date}. ${days[now.getDay()]}`;
       }
 
       setInterval(updateDateTime, 1000);

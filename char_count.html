@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>글자수 세기</title>
+    <link rel="stylesheet" href="char_style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>글자수 세기</h1>
+        <div class="decoration">❖ ❖ ❖</div>
+        <p>나랏말씀이 듕귁에 달아 문자와로 서르 사맛디 아니할쎄</p>
+      </div>
+
+      <div class="textarea-wrapper">
+        <textarea id="textInput" placeholder="이 곳에 글을 적으시오..."></textarea>
+      </div>
+
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-label">공백 포함</div>
+          <div class="stat-value">
+            <span id="withSpace">0</span>
+            <span class="stat-unit">자</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">공백 제외</div>
+          <div class="stat-value">
+            <span id="withoutSpace">0</span>
+            <span class="stat-unit">자</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button class="btn" onclick="copyText()">복사</button>
+        <button class="btn" onclick="clearText()">삭제</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">복사되었나이다</div>
+
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="modal-title">알림</div>
+        <div class="modal-message">글을 지우시겠습니까?</div>
+        <div class="modal-buttons">
+          <button class="modal-btn" onclick="confirmClear()">예</button>
+          <button class="modal-btn" onclick="closeModal()">아니오</button>
+        </div>
+      </div>
+    </div>
+    <script src="char_scrpit.js"></script>
+  </body>
+</html>
