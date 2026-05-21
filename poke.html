@@ -107,6 +107,36 @@
       .ground {
         background-color: #d97746;
       }
+      .ice {
+        background-color: #73cec0;
+      }
+      .fighting {
+        background-color: #ce416b;
+      }
+      .flying {
+        background-color: #8fa9de;
+      }
+      .psychic {
+        background-color: #fa7179;
+      }
+      .bug {
+        background-color: #91c12f;
+      }
+      .rock {
+        background-color: #c5b78c;
+      }
+      .ghost {
+        background-color: #5269ad;
+      }
+      .dragon {
+        background-color: #0b6dc3;
+      }
+      .dark {
+        background-color: #5a5465;
+      }
+      .steel {
+        background-color: #5a8ea2;
+      }
     </style>
   </head>
   <body class="h-screen flex flex-col">
@@ -169,6 +199,7 @@
 
     <script>
       let allPokemonData = [];
+      let pokemonDetailsById = {};
       let currentDisplayList = [];
       let currentPage = 1;
       const limit = 10;
@@ -192,9 +223,12 @@
 
       async function init() {
         try {
-          const indexResponse = await fetch("data/pokemon-index.json");
+          const [indexResponse, detailsResponse] = await Promise.all([fetch("data/pokemon-index.json"), fetch("data/pokemon-details.json")]);
           if (!indexResponse.ok) throw new Error(`Pokemon index failed: ${indexResponse.status}`);
+          if (!detailsResponse.ok) throw new Error(`Pokemon details failed: ${detailsResponse.status}`);
           allPokemonData = await indexResponse.json();
+          const pokemonDetails = await detailsResponse.json();
+          pokemonDetailsById = Object.fromEntries(pokemonDetails.map((pokemon) => [String(pokemon.id), pokemon]));
         } catch (e) {
           console.warn(e);
           allPokemonData = Array.from({ length: 1025 }, (_, i) => {
@@ -205,6 +239,20 @@
         currentDisplayList = [...allPokemonData];
         document.getElementById("loading").classList.add("hidden");
         updateView();
+      }
+
+      function renderPokemonDetails(data) {
+        document.getElementById("modal-types").innerHTML = data.types
+          .map((t) => `<span class="px-5 py-1.5 rounded-full text-white font-black text-sm uppercase ${t.className}">${t.name}</span>`)
+          .join(" ");
+
+        document.getElementById("modal-stats").innerHTML = data.stats
+          .map(
+            (s) => `
+                <div class="flex justify-between px-4 font-black text-xl"><span class="text-gray-400">${s.name}</span><span class="text-blue-500">${s.base}</span></div>
+            `
+          )
+          .join("");
       }
 
       async function updateView() {
@@ -280,23 +328,20 @@
         document.getElementById("modal-types").innerHTML = "";
         document.getElementById("modal-stats").innerHTML = "";
 
+        const localDetails = pokemonDetailsById[String(id)];
+        if (localDetails) {
+          renderPokemonDetails(localDetails);
+          return;
+        }
+
         try {
           const data = await fetchPokeApi(`/pokemon/${id}`);
 
-          document.getElementById("modal-types").innerHTML = data.types
-            .map((t) => `<span class="px-5 py-1.5 rounded-full text-white font-black text-sm uppercase ${t.type.name}">${t.type.name}</span>`)
-            .join(" ");
-
           const statsMap = { hp: "HP", attack: "공격", defense: "방어", "special-attack": "특공", "special-defense": "특방", speed: "속도" };
-          document.getElementById("modal-stats").innerHTML = data.stats
-            .map(
-              (s) => `
-                  <div class="flex justify-between px-4 font-black text-xl"><span class="text-gray-400">${
-                    statsMap[s.stat.name]
-                  }</span><span class="text-blue-500">${s.base_stat}</span></div>
-              `
-            )
-            .join("");
+          renderPokemonDetails({
+            types: data.types.map((t) => ({ name: t.type.name, className: t.type.name })),
+            stats: data.stats.map((s) => ({ name: statsMap[s.stat.name], base: s.base_stat }))
+          });
         } catch (e) {
           console.warn(e);
           document.getElementById("modal-stats").innerHTML =
