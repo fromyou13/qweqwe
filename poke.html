@@ -186,6 +186,10 @@
         return `${POKE_IMAGE_PROXY_BASE}?url=${encodeURIComponent(imageUrl)}`;
       }
 
+      function getOfficialArtworkUrl(id) {
+        return getPokeImageUrl(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`);
+      }
+
       async function fetchPokeApi(pathOrUrl) {
         const res = await fetch(getPokeApiUrl(pathOrUrl));
         if (!res.ok) throw new Error(`PokeAPI request failed: ${res.status}`);
@@ -196,14 +200,10 @@
         try {
           const data = await fetchPokeApi("/pokemon?limit=1025");
 
-          const detailPromises = data.results.map(async (p, i) => {
+          allPokemonData = data.results.map((p, i) => {
             const id = i + 1;
-            const speciesData = await fetchPokeApi(`/pokemon-species/${id}/`);
-            const koName = speciesData.names.find((n) => n.language.name === "ko").name;
-            return { id, koName, enName: p.name, url: p.url };
+            return { id, koName: p.name, enName: p.name, url: p.url };
           });
-
-          allPokemonData = await Promise.all(detailPromises);
           currentDisplayList = [...allPokemonData];
           document.getElementById("loading").classList.add("hidden");
           updateView();
@@ -220,18 +220,16 @@
         const start = (currentPage - 1) * limit;
         const target = currentDisplayList.slice(start, start + limit);
 
-        const detailedPokemons = await Promise.all(target.map((p) => fetchPokeApi(p.url)));
-
         document.getElementById("loading").classList.add("hidden");
-        detailedPokemons.forEach((poke, i) => {
+        target.forEach((poke) => {
           list.innerHTML += `
                     <div onclick="openModal('${poke.id}')" class="pokemon-card">
                         <div class="bg-gray-50 rounded-[2rem] w-full aspect-square flex justify-center items-center p-4 mb-4 overflow-hidden shadow-inner">
-                            <img src="${getPokeImageUrl(poke.sprites.other["official-artwork"].front_default)}" 
-                                 class="w-full h-full object-contain hover:scale-110 transition-transform duration-300" alt="${target[i].koName}">
+                            <img src="${getOfficialArtworkUrl(poke.id)}" 
+                                 class="w-full h-full object-contain hover:scale-110 transition-transform duration-300" alt="${poke.koName}">
                         </div>
                         <div class="text-sm font-black text-blue-300 font-mono italic mb-1">#${String(poke.id).padStart(4, "0")}</div>
-                        <div class="text-2xl font-black text-gray-700 truncate w-full text-center tracking-tighter">${target[i].koName}</div>
+                        <div class="text-2xl font-black text-gray-700 truncate w-full text-center tracking-tighter">${poke.koName}</div>
                     </div>
                 `;
         });
@@ -280,9 +278,17 @@
         modal.classList.remove("hidden");
         const data = await fetchPokeApi(`/pokemon/${id}`);
         const koData = allPokemonData.find((d) => d.id == id);
+        let displayName = koData.koName;
 
-        document.getElementById("modal-img").src = getPokeImageUrl(data.sprites.other["official-artwork"].front_default);
-        document.getElementById("modal-name").innerText = koData.koName;
+        try {
+          const speciesData = await fetchPokeApi(`/pokemon-species/${id}/`);
+          displayName = speciesData.names.find((n) => n.language.name === "ko")?.name || displayName;
+        } catch (e) {
+          console.warn(e);
+        }
+
+        document.getElementById("modal-img").src = getOfficialArtworkUrl(id);
+        document.getElementById("modal-name").innerText = displayName;
         document.getElementById("modal-types").innerHTML = data.types
           .map((t) => `<span class="px-5 py-1.5 rounded-full text-white font-black text-sm uppercase ${t.type.name}">${t.type.name}</span>`)
           .join(" ");
