@@ -174,20 +174,14 @@
       const limit = 10;
       const USE_LOCAL_PROXY = location.protocol !== "file:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1";
       const POKE_API_BASE = USE_LOCAL_PROXY ? "/api/poke/api/v2" : "https://pokeapi.co/api/v2";
-      const POKE_IMAGE_PROXY_BASE = "/api/poke-image";
 
       function getPokeApiUrl(pathOrUrl) {
         const path = pathOrUrl.replace("https://pokeapi.co/api/v2", "");
         return `${POKE_API_BASE}${path}`;
       }
 
-      function getPokeImageUrl(imageUrl) {
-        if (!imageUrl || !USE_LOCAL_PROXY) return imageUrl;
-        return `${POKE_IMAGE_PROXY_BASE}?url=${encodeURIComponent(imageUrl)}`;
-      }
-
       function getOfficialArtworkUrl(id) {
-        return getPokeImageUrl(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`);
+        return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${id}.png`;
       }
 
       async function fetchPokeApi(pathOrUrl) {
@@ -197,19 +191,13 @@
       }
 
       async function init() {
-        try {
-          const data = await fetchPokeApi("/pokemon?limit=1025");
-
-          allPokemonData = data.results.map((p, i) => {
-            const id = i + 1;
-            return { id, koName: p.name, enName: p.name, url: p.url };
-          });
-          currentDisplayList = [...allPokemonData];
-          document.getElementById("loading").classList.add("hidden");
-          updateView();
-        } catch (e) {
-          console.error(e);
-        }
+        allPokemonData = Array.from({ length: 1025 }, (_, i) => {
+          const id = i + 1;
+          return { id, koName: `Pokemon #${String(id).padStart(4, "0")}`, enName: `pokemon-${id}` };
+        });
+        currentDisplayList = [...allPokemonData];
+        document.getElementById("loading").classList.add("hidden");
+        updateView();
       }
 
       async function updateView() {
@@ -265,7 +253,9 @@
           return;
         }
 
-        currentDisplayList = allPokemonData.filter((p) => p.koName.includes(query) || p.enName.includes(query) || String(p.id) === query);
+        currentDisplayList = allPokemonData.filter(
+          (p) => p.koName.toLowerCase().includes(query) || p.enName.includes(query) || String(p.id) === query
+        );
 
         currentPage = 1;
         info.innerText = currentDisplayList.length > 0 ? `결과: ${currentDisplayList.length}마리` : `검색 결과 없음`;
@@ -278,7 +268,7 @@
         modal.classList.remove("hidden");
         const data = await fetchPokeApi(`/pokemon/${id}`);
         const koData = allPokemonData.find((d) => d.id == id);
-        let displayName = koData.koName;
+        let displayName = data.name || koData.koName;
 
         try {
           const speciesData = await fetchPokeApi(`/pokemon-species/${id}/`);
