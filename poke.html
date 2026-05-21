@@ -172,16 +172,33 @@
       let currentDisplayList = [];
       let currentPage = 1;
       const limit = 10;
+      const USE_LOCAL_PROXY = location.protocol !== "file:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1";
+      const POKE_API_BASE = USE_LOCAL_PROXY ? "/api/poke/api/v2" : "https://pokeapi.co/api/v2";
+      const POKE_IMAGE_PROXY_BASE = "/api/poke-image";
+
+      function getPokeApiUrl(pathOrUrl) {
+        const path = pathOrUrl.replace("https://pokeapi.co/api/v2", "");
+        return `${POKE_API_BASE}${path}`;
+      }
+
+      function getPokeImageUrl(imageUrl) {
+        if (!imageUrl || !USE_LOCAL_PROXY) return imageUrl;
+        return `${POKE_IMAGE_PROXY_BASE}?url=${encodeURIComponent(imageUrl)}`;
+      }
+
+      async function fetchPokeApi(pathOrUrl) {
+        const res = await fetch(getPokeApiUrl(pathOrUrl));
+        if (!res.ok) throw new Error(`PokeAPI request failed: ${res.status}`);
+        return res.json();
+      }
 
       async function init() {
         try {
-          const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
-          const data = await res.json();
+          const data = await fetchPokeApi("/pokemon?limit=1025");
 
           const detailPromises = data.results.map(async (p, i) => {
             const id = i + 1;
-            const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}/`);
-            const speciesData = await speciesRes.json();
+            const speciesData = await fetchPokeApi(`/pokemon-species/${id}/`);
             const koName = speciesData.names.find((n) => n.language.name === "ko").name;
             return { id, koName, enName: p.name, url: p.url };
           });
@@ -203,14 +220,14 @@
         const start = (currentPage - 1) * limit;
         const target = currentDisplayList.slice(start, start + limit);
 
-        const detailedPokemons = await Promise.all(target.map((p) => fetch(p.url).then((r) => r.json())));
+        const detailedPokemons = await Promise.all(target.map((p) => fetchPokeApi(p.url)));
 
         document.getElementById("loading").classList.add("hidden");
         detailedPokemons.forEach((poke, i) => {
           list.innerHTML += `
                     <div onclick="openModal('${poke.id}')" class="pokemon-card">
                         <div class="bg-gray-50 rounded-[2rem] w-full aspect-square flex justify-center items-center p-4 mb-4 overflow-hidden shadow-inner">
-                            <img src="${poke.sprites.other["official-artwork"].front_default}" 
+                            <img src="${getPokeImageUrl(poke.sprites.other["official-artwork"].front_default)}" 
                                  class="w-full h-full object-contain hover:scale-110 transition-transform duration-300" alt="${target[i].koName}">
                         </div>
                         <div class="text-sm font-black text-blue-300 font-mono italic mb-1">#${String(poke.id).padStart(4, "0")}</div>
@@ -261,11 +278,10 @@
       async function openModal(id) {
         const modal = document.getElementById("image-modal");
         modal.classList.remove("hidden");
-        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-        const data = await res.json();
+        const data = await fetchPokeApi(`/pokemon/${id}`);
         const koData = allPokemonData.find((d) => d.id == id);
 
-        document.getElementById("modal-img").src = data.sprites.other["official-artwork"].front_default;
+        document.getElementById("modal-img").src = getPokeImageUrl(data.sprites.other["official-artwork"].front_default);
         document.getElementById("modal-name").innerText = koData.koName;
         document.getElementById("modal-types").innerHTML = data.types
           .map((t) => `<span class="px-5 py-1.5 rounded-full text-white font-black text-sm uppercase ${t.type.name}">${t.type.name}</span>`)
