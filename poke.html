@@ -191,10 +191,17 @@
       }
 
       async function init() {
-        allPokemonData = Array.from({ length: 1025 }, (_, i) => {
-          const id = i + 1;
-          return { id, koName: `Pokemon #${String(id).padStart(4, "0")}`, enName: `pokemon-${id}` };
-        });
+        try {
+          const indexResponse = await fetch("data/pokemon-index.json");
+          if (!indexResponse.ok) throw new Error(`Pokemon index failed: ${indexResponse.status}`);
+          allPokemonData = await indexResponse.json();
+        } catch (e) {
+          console.warn(e);
+          allPokemonData = Array.from({ length: 1025 }, (_, i) => {
+            const id = i + 1;
+            return { id, koName: `Pokemon #${String(id).padStart(4, "0")}`, enName: `pokemon-${id}` };
+          });
+        }
         currentDisplayList = [...allPokemonData];
         document.getElementById("loading").classList.add("hidden");
         updateView();
@@ -254,7 +261,7 @@
         }
 
         currentDisplayList = allPokemonData.filter(
-          (p) => p.koName.toLowerCase().includes(query) || p.enName.includes(query) || String(p.id) === query
+          (p) => p.koName.toLowerCase().includes(query) || p.enName.toLowerCase().includes(query) || String(p.id) === query
         );
 
         currentPage = 1;
@@ -266,33 +273,35 @@
       async function openModal(id) {
         const modal = document.getElementById("image-modal");
         modal.classList.remove("hidden");
-        const data = await fetchPokeApi(`/pokemon/${id}`);
         const koData = allPokemonData.find((d) => d.id == id);
-        let displayName = data.name || koData.koName;
-
-        try {
-          const speciesData = await fetchPokeApi(`/pokemon-species/${id}/`);
-          displayName = speciesData.names.find((n) => n.language.name === "ko")?.name || displayName;
-        } catch (e) {
-          console.warn(e);
-        }
 
         document.getElementById("modal-img").src = getOfficialArtworkUrl(id);
-        document.getElementById("modal-name").innerText = displayName;
-        document.getElementById("modal-types").innerHTML = data.types
-          .map((t) => `<span class="px-5 py-1.5 rounded-full text-white font-black text-sm uppercase ${t.type.name}">${t.type.name}</span>`)
-          .join(" ");
+        document.getElementById("modal-name").innerText = koData?.koName || `Pokemon #${String(id).padStart(4, "0")}`;
+        document.getElementById("modal-types").innerHTML = "";
+        document.getElementById("modal-stats").innerHTML = "";
 
-        const statsMap = { hp: "HP", attack: "공격", defense: "방어", "special-attack": "특공", "special-defense": "특방", speed: "속도" };
-        document.getElementById("modal-stats").innerHTML = data.stats
-          .map(
-            (s) => `
-                <div class="flex justify-between px-4 font-black text-xl"><span class="text-gray-400">${
-                  statsMap[s.stat.name]
-                }</span><span class="text-blue-500">${s.base_stat}</span></div>
-            `
-          )
-          .join("");
+        try {
+          const data = await fetchPokeApi(`/pokemon/${id}`);
+
+          document.getElementById("modal-types").innerHTML = data.types
+            .map((t) => `<span class="px-5 py-1.5 rounded-full text-white font-black text-sm uppercase ${t.type.name}">${t.type.name}</span>`)
+            .join(" ");
+
+          const statsMap = { hp: "HP", attack: "공격", defense: "방어", "special-attack": "특공", "special-defense": "특방", speed: "속도" };
+          document.getElementById("modal-stats").innerHTML = data.stats
+            .map(
+              (s) => `
+                  <div class="flex justify-between px-4 font-black text-xl"><span class="text-gray-400">${
+                    statsMap[s.stat.name]
+                  }</span><span class="text-blue-500">${s.base_stat}</span></div>
+              `
+            )
+            .join("");
+        } catch (e) {
+          console.warn(e);
+          document.getElementById("modal-stats").innerHTML =
+            '<div class="col-span-2 text-gray-400 font-black">상세 정보를 불러오지 못했어요</div>';
+        }
       }
 
       function closeModal() {
