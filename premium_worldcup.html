@@ -247,6 +247,33 @@
         opacity: 1;
       }
 
+      .choice-card.selected {
+        transform: translateY(-18px) scale(1.08);
+        border-color: #fbbf24;
+        box-shadow:
+          0 0 110px rgba(251, 191, 36, 0.85),
+          0 35px 100px rgba(236, 72, 153, 0.5);
+      }
+
+      .choice-card.not-selected {
+        opacity: 0.22;
+        filter: grayscale(1) blur(1px);
+        transform: translateY(18px) scale(0.92);
+      }
+
+      .choice-card.is-picking {
+        pointer-events: none;
+      }
+
+      .choice-card.selected .card-image {
+        transform: scale(1.09);
+      }
+
+      .choice-card.selected .name-tag {
+        background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+        color: #78350f;
+      }
+
       .image-wrapper {
         width: 100%;
         height: 65vh;
@@ -299,20 +326,38 @@
 
       #result-area {
         display: none;
-        animation: popUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        animation: resultReveal 0.45s ease-out both;
+        position: relative;
+        z-index: 2;
       }
 
-      @keyframes popUp {
+      #result-area::before,
+      #result-area::after {
+        content: '';
+        position: absolute;
+        inset: -80px;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      #result-area::before {
+        background:
+          radial-gradient(circle at 50% 42%, rgba(251, 191, 36, 0.2), transparent 36%),
+          radial-gradient(circle at 50% 58%, rgba(236, 72, 153, 0.13), transparent 42%);
+      }
+
+      #result-area::after {
+        display: none;
+      }
+
+      @keyframes resultReveal {
         0% {
-          transform: scale(0.5);
           opacity: 0;
-        }
-        60% {
-          transform: scale(1.1);
+          transform: translateY(18px);
         }
         100% {
-          transform: scale(1);
           opacity: 1;
+          transform: translateY(0);
         }
       }
 
@@ -320,38 +365,126 @@
         display: flex;
         justify-content: center;
         margin-top: 20px;
+        position: relative;
+        z-index: 2;
       }
 
       #winner-card-display .choice-card {
         max-width: 700px;
-        animation: winner-shine 2s ease-in-out infinite;
+        border: 0;
+        background: var(--card-bg);
+        box-shadow:
+          0 0 90px rgba(251, 191, 36, 0.72),
+          0 35px 120px rgba(236, 72, 153, 0.55),
+          0 30px 80px rgba(99, 102, 241, 0.6);
       }
 
-      @keyframes winner-shine {
-        0%, 100% {
-          box-shadow: 0 30px 80px rgba(99, 102, 241, 0.6);
-        }
-        50% {
-          box-shadow: 0 40px 100px rgba(236, 72, 153, 0.8);
-        }
+      #winner-card-display .choice-card::before {
+        --rainbow-angle: 0deg;
+        content: '';
+        position: absolute;
+        inset: 0;
+        padding: 5px;
+        border-radius: inherit;
+        background: conic-gradient(
+          from var(--rainbow-angle),
+          #ff3d8b,
+          #fbbf24,
+          #22c55e,
+          #38bdf8,
+          #8b5cf6,
+          #ff3d8b
+        );
+        opacity: 1;
+        pointer-events: none;
+        z-index: 3;
+        -webkit-mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        animation: rainbow-border 3.5s linear infinite;
+      }
+
+      #winner-card-display .choice-card:hover {
+        transform: none;
+      }
+
+      #winner-card-display .choice-card:hover .card-image {
+        transform: none;
+      }
+
+      .snow-layer {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        overflow: hidden;
+        contain: layout paint;
+      }
+
+      .snow-flake {
+        position: absolute;
+        top: var(--top);
+        width: var(--size);
+        height: var(--size);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.78);
+        opacity: var(--opacity);
+        animation: snow-drift var(--duration) ease-in-out var(--delay) infinite;
+        will-change: transform;
       }
 
       .winner-title {
+        color: inherit;
+        font-size: 3.5rem;
+        font-weight: 900;
+        margin-bottom: 40px;
+        text-shadow: 0 0 60px rgba(251, 191, 36, 0.6);
+        position: relative;
+        z-index: 2;
+      }
+
+      .winner-title-text {
         color: transparent;
         background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        font-size: 3.5rem;
-        font-weight: 900;
-        margin-bottom: 40px;
-        text-shadow: 0 0 60px rgba(251, 191, 36, 0.6);
         animation: shine 2s ease-in-out infinite;
       }
 
       @keyframes shine {
         0%, 100% { filter: brightness(1); }
         50% { filter: brightness(1.3); }
+      }
+
+      @property --rainbow-angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+      }
+
+      @keyframes rainbow-border {
+        to { --rainbow-angle: 360deg; }
+      }
+
+      @keyframes snow-drift {
+        0%, 100% {
+          transform: translate3d(0, 0, 0) scale(1);
+        }
+        25% {
+          transform: translate3d(var(--sway), var(--lift), 0) scale(1.06);
+        }
+        50% {
+          transform: translate3d(var(--drift), var(--drop), 0) scale(0.94);
+        }
+        75% {
+          transform: translate3d(calc(var(--sway) * -1), calc(var(--lift) * -0.55), 0) scale(1.03);
+        }
       }
 
       #selected-cat-name {
@@ -432,7 +565,7 @@
       </div>
 
       <div id="result-area">
-        <h1 class="winner-title">🎊 FINAL WINNER 🎊</h1>
+        <h1 class="winner-title"><span class="winner-title-text">FINAL WINNER</span></h1>
         <div id="winner-card-display"></div>
       </div>
     </div>
@@ -446,6 +579,9 @@
       let currentRoundItems = [];
       let nextRoundItems = [];
       let matchIdx = 0;
+      let isPicking = false;
+      let pendingWinnerCard = null;
+      const PICK_DELAY_MS = 2000;
 
       function getSafeImageUrl(url) {
         if (!url || !url.startsWith("http")) return "https://via.placeholder.com/800x600?text=No+Image";
@@ -550,6 +686,7 @@
       }
 
       function renderCard(cardElement, item) {
+        cardElement.classList.remove("selected", "not-selected", "is-picking");
         cardElement.innerHTML = `
             <div class="image-wrapper">
                 <img class="card-image" 
@@ -562,10 +699,40 @@
       }
 
       function pick(side) {
-        nextRoundItems.push(currentRoundItems[matchIdx * 2 + side]);
-        matchIdx++;
-        if (matchIdx * 2 >= currentRoundItems.length) finishRound();
-        else showMatch();
+        if (isPicking) return;
+
+        const isFinalMatch = currentRoundItems.length === 2;
+        if (isFinalMatch) {
+          const selectedCard = document.getElementById(side === 0 ? "left-card" : "right-card");
+          pendingWinnerCard = selectedCard.cloneNode(true);
+          pendingWinnerCard.removeAttribute("id");
+          pendingWinnerCard.classList.remove("selected", "not-selected", "is-picking");
+          nextRoundItems.push(currentRoundItems[matchIdx * 2 + side]);
+          matchIdx++;
+          finishRound();
+          return;
+        }
+
+        isPicking = true;
+
+        const leftCard = document.getElementById("left-card");
+        const rightCard = document.getElementById("right-card");
+        const selectedCard = side === 0 ? leftCard : rightCard;
+        const rejectedCard = side === 0 ? rightCard : leftCard;
+
+        leftCard.classList.add("is-picking");
+        rightCard.classList.add("is-picking");
+        selectedCard.classList.add("selected");
+        rejectedCard.classList.add("not-selected");
+
+        setTimeout(() => {
+          nextRoundItems.push(currentRoundItems[matchIdx * 2 + side]);
+          matchIdx++;
+          isPicking = false;
+
+          if (matchIdx * 2 >= currentRoundItems.length) finishRound();
+          else showMatch();
+        }, PICK_DELAY_MS);
       }
 
       function finishRound() {
@@ -574,17 +741,61 @@
           document.getElementById("result-area").style.display = "block";
           const winnerDisplay = document.getElementById("winner-card-display");
           winnerDisplay.innerHTML = "";
-          const winnerCard = document.createElement("div");
+          const winnerCard = pendingWinnerCard || document.createElement("div");
           winnerCard.className = "choice-card";
+          winnerCard.removeAttribute("onclick");
           winnerCard.style.maxWidth = "700px";
-          renderCard(winnerCard, nextRoundItems[0]);
+          if (!pendingWinnerCard) renderCard(winnerCard, nextRoundItems[0]);
           winnerDisplay.appendChild(winnerCard);
+          pendingWinnerCard = null;
+          startSnowfall();
         } else {
           currentRoundItems = [...nextRoundItems].sort(() => Math.random() - 0.5);
           nextRoundItems = [];
           matchIdx = 0;
           showMatch();
         }
+      }
+
+      function startSnowfall() {
+        document.querySelector(".snow-layer")?.remove();
+
+        const snowLayer = document.createElement("div");
+        snowLayer.className = "snow-layer";
+        document.body.appendChild(snowLayer);
+        addSnowflakes(snowLayer, 115);
+      }
+
+      function addSnowflakes(snowLayer, count) {
+        const fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < count; i++) {
+          const flake = document.createElement("span");
+          const size = 3 + Math.random() * 6;
+          const left = Math.random() * 100;
+          const top = Math.random() * 100;
+          const drift = (Math.random() - 0.5) * 300;
+          const sway = (Math.random() - 0.5) * 190;
+          const lift = -34 - Math.random() * 76;
+          const drop = 30 + Math.random() * 78;
+          const duration = 11 + Math.random() * 13;
+          const delay = Math.random() * -duration;
+
+          flake.className = "snow-flake";
+          flake.style.left = `${left}%`;
+          flake.style.setProperty("--top", `${top}%`);
+          flake.style.setProperty("--size", `${size}px`);
+          flake.style.setProperty("--drift", `${drift}px`);
+          flake.style.setProperty("--sway", `${sway}px`);
+          flake.style.setProperty("--lift", `${lift}px`);
+          flake.style.setProperty("--drop", `${drop}px`);
+          flake.style.setProperty("--duration", `${duration}s`);
+          flake.style.setProperty("--delay", `${delay}s`);
+          flake.style.setProperty("--opacity", 0.24 + Math.random() * 0.48);
+          fragment.appendChild(flake);
+        }
+
+        snowLayer.appendChild(fragment);
       }
 
       init();
