@@ -280,6 +280,8 @@
         background: #000;
         overflow: hidden;
         position: relative;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .card-image {
@@ -495,6 +497,84 @@
         text-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
       }
 
+      .round-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(5, 8, 22, 0.78);
+        backdrop-filter: blur(12px);
+      }
+
+      .round-modal.show {
+        display: flex;
+        animation: fadeIn 0.25s ease both;
+      }
+
+      .round-modal-content {
+        width: min(520px, 100%);
+        padding: 48px 36px 38px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 30px;
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.98), rgba(49, 46, 129, 0.96));
+        box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55), 0 0 60px rgba(99, 102, 241, 0.28);
+        text-align: center;
+        animation: roundModalPop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+      }
+
+      .round-modal-kicker {
+        margin-bottom: 12px;
+        color: #c7d2fe;
+        font-size: 0.9rem;
+        font-weight: 800;
+        letter-spacing: 0.22em;
+      }
+
+      #round-modal-title {
+        margin: 0;
+        color: white;
+        font-size: clamp(3rem, 10vw, 5rem);
+        line-height: 1;
+        text-shadow: 0 0 38px rgba(236, 72, 153, 0.65);
+      }
+
+      #round-modal-description {
+        margin: 20px 0 30px;
+        color: #e2e8f0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+
+      .round-modal-button {
+        width: 100%;
+        padding: 16px 24px;
+        border: 0;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        font: inherit;
+        font-size: 1.1rem;
+        font-weight: 900;
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 12px 30px rgba(99, 102, 241, 0.38);
+        transition: transform 0.2s ease, filter 0.2s ease;
+      }
+
+      .round-modal-button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.12);
+      }
+
+      @keyframes roundModalPop {
+        from { opacity: 0; transform: scale(0.86) translateY(18px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+
       @media (max-width: 1024px) {
         h1 {
           font-size: 3rem;
@@ -570,6 +650,15 @@
       </div>
     </div>
 
+    <div id="round-modal" class="round-modal" role="dialog" aria-modal="true" aria-labelledby="round-modal-title">
+      <div class="round-modal-content">
+        <div class="round-modal-kicker">NEXT ROUND</div>
+        <h2 id="round-modal-title">16강</h2>
+        <p id="round-modal-description">8개의 대결이 시작됩니다.</p>
+        <button id="round-modal-button" class="round-modal-button" type="button">대결 시작</button>
+      </div>
+    </div>
+
     <script>
       const SHEET_URL =
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vRX-H0Q1h96KFsboBGbvRmWc3R2nG4eF2pksh2v_C2BcI5AbU0SymvSfdjbb53UAJC61rAjWHo6JAI_/pub?output=csv";
@@ -581,7 +670,9 @@
       let matchIdx = 0;
       let isPicking = false;
       let pendingWinnerCard = null;
-      const PICK_DELAY_MS = 2000;
+      let roundModalTimer = null;
+      const PICK_DELAY_MS = 1000;
+      const ROUND_MODAL_DURATION_MS = 2000;
 
       function getSafeImageUrl(url) {
         if (!url || !url.startsWith("http")) return "https://via.placeholder.com/800x600?text=No+Image";
@@ -672,6 +763,35 @@
         showMatch();
       }
 
+      function getRoundName(total) {
+        return total === 2 ? "🥇 결승" : `${total}강`;
+      }
+
+      function showRoundModal() {
+        const modal = document.getElementById("round-modal");
+        const button = document.getElementById("round-modal-button");
+        const total = currentRoundItems.length;
+        document.getElementById("round-modal-title").innerText = getRoundName(total);
+        document.getElementById("round-modal-description").innerText =
+          total === 2 ? "최종 우승자를 결정합니다." : `${Math.floor(total / 2)}개의 대결이 시작됩니다.`;
+        modal.classList.add("show");
+        button.focus();
+
+        clearTimeout(roundModalTimer);
+        button.onclick = closeRoundModal;
+        roundModalTimer = setTimeout(closeRoundModal, ROUND_MODAL_DURATION_MS);
+      }
+
+      function closeRoundModal() {
+        const modal = document.getElementById("round-modal");
+        if (!modal.classList.contains("show")) return;
+
+        clearTimeout(roundModalTimer);
+        roundModalTimer = null;
+        modal.classList.remove("show");
+        showMatch();
+      }
+
       function showMatch() {
         const total = currentRoundItems.length;
         if (matchIdx * 2 === total - 1) {
@@ -679,7 +799,7 @@
           finishRound();
           return;
         }
-        const roundName = total === 2 ? "🥇 FINAL" : `${total}강`;
+        const roundName = getRoundName(total);
         document.getElementById("round-title").innerText = `${roundName} (${matchIdx + 1}/${Math.floor(total / 2)})`;
         renderCard(document.getElementById("left-card"), currentRoundItems[matchIdx * 2]);
         renderCard(document.getElementById("right-card"), currentRoundItems[matchIdx * 2 + 1]);
@@ -753,7 +873,7 @@
           currentRoundItems = [...nextRoundItems].sort(() => Math.random() - 0.5);
           nextRoundItems = [];
           matchIdx = 0;
-          showMatch();
+          showRoundModal();
         }
       }
 
