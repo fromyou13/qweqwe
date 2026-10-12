@@ -238,6 +238,7 @@
     </div>
 
     <script src="word-relay-policy.js"></script>
+    <script src="data/word-relay-dictionary.js"></script>
     <script>
       // 상태 변수들
       let gameState = "START";
@@ -276,6 +277,10 @@
       }
 
       function startGame() {
+        if (!window.wordRelayPolicy || window.wordRelayDictionary?.size !== 274932) {
+          document.getElementById("overlay-desc").innerText = "단어 사전을 불러오지 못했습니다. 페이지를 새로고침해 주세요.";
+          return;
+        }
         gameSession += 1;
         setLoading(false);
         gameState = "PLAYING";
@@ -396,7 +401,7 @@
         const session = gameSession;
         let isValid;
         try {
-          isValid = await verifyWordAPI(input);
+          isValid = await verifyWord(input);
         } catch (error) {
           if (session === gameSession && gameState === "PLAYING") showError(error.message);
           return;
@@ -439,23 +444,11 @@
         focusInput();
       }
 
-      async function verifyWordAPI(word) {
-        if (window.wordRelayPolicy.getWordPolicyError(word)) return false;
-        if (word.length === 2) return true;
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
-        try {
-          const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`, { signal: controller.signal });
-          if (response.status === 404) return false;
-          if (!response.ok) throw new Error("Dictionary unavailable");
-          const entries = await response.json();
-          if (!Array.isArray(entries)) throw new Error("Invalid dictionary response");
-          return entries.some((entry) => entry.word?.toLowerCase() === word.toLowerCase());
-        } catch {
-          throw new Error("사전 연결이 지연되거나 실패했습니다. 다시 시도해 주세요.");
-        } finally {
-          clearTimeout(timeout);
+      function verifyWord(word) {
+        if (window.wordRelayDictionary?.size !== 274932) {
+          throw new Error("단어 사전을 불러오지 못했습니다. 페이지를 새로고침해 주세요.");
         }
+        return window.wordRelayDictionary.check(word);
       }
 
       function setLoading(val) {
